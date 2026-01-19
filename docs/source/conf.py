@@ -38,6 +38,7 @@ autodoc_mock_imports = [
     "astropy",
     "astropy.constants",
     "casatools",
+    "casatasks", 
     "jax",
     "jax.numpy",
     "jax.random",
