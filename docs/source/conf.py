@@ -18,6 +18,7 @@ author = 'Tomohiro C. Yoshida'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
+
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
@@ -30,22 +31,25 @@ autosummary_generate = True
 
 # Mock heavy/optional dependencies so autodoc works on Read the Docs
 autodoc_mock_imports = [
-    'jax',
-    'jax.numpy',
-    'jax.random',
-    'jax.scipy',
-    'jax.scipy.interpolate',
-    'numpyro',
-    'numpyro.distributions',
-    'numpyro.infer',
-    'numpyro.infer.autoguide',
-    'numpyro.optim',
-    'matplotlib',
-    'matplotlib.pyplot',
-    'astropy',
-    'astropy.constants',
-    'scipy',
-    'scipy.special',
+    "astroquery",
+    "astroquery.linelists",
+    "astroquery.linelists.cdms",
+    "astropy",
+    "astropy.constants",
+    "jax",
+    "jax.numpy",
+    "jax.random",
+    "jax.scipy",
+    "jax.scipy.interpolate",
+    "numpyro",
+    "numpyro.distributions",
+    "numpyro.infer",
+    "numpyro.infer.autoguide",
+    "numpyro.optim",
+    "matplotlib",
+    "matplotlib.pyplot",
+    "scipy",
+    "scipy.special",
 ]
 
 templates_path = ['_templates']
@@ -57,3 +61,6 @@ exclude_patterns = []
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+
+
+
