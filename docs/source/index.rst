@@ -6,12 +6,12 @@
 frappe documentation
 ====================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
+Flexible Radial Analysis of ProtoPlanetary disk Emissions (FRAPPE) provides Gaussian-process-based models for analyzing interferometric visibilities and dust opacity. The docs below focus on the main modeling interface in ``frappe.model``.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+   api/model
+
 
