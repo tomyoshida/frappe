@@ -117,7 +117,7 @@ class model:
             priors = self.free_parameters['log10_Sigma_d']
 
             _g_variance = priors['g_variance'] + (numpyro.sample(f"variance", Uniform(-1.0, 1.0)) + 1.0) / 2.0 * ( 1.0 - priors['g_variance'] )
-            _g_lengthscale = priors['g_lengthscale'] + (numpyro.sample(f"lengthscale", Uniform(-1.0, 1.0)) + 1.0) / 2.0 * ( jnp.max(R)/2.0 - priors['g_lengthscale'] )
+            _g_lengthscale = priors['g_lengthscale'] + (numpyro.sample(f"lengthscale", Uniform(-1.0, 1.0)) + 1.0) / 2.0 * ( jnp.max(R)/4.0 - priors['g_lengthscale'] )
             _g_mean = priors['g_mean']
 
         
