@@ -460,13 +460,19 @@ class model:
                 
 
     def calc_model( self, parameters ):
-        '''
-        Calculate model visibilities and intensities for given parameters.
-        parameters: dictionary of model parameters
-        Returns:
-            V_res: dictionary of model visibilities for each band and observation
-            I_res: dictionary of model intensities for each band and observation
-        '''
+        """
+        Compute model visibilities using the current parameters.
+
+        Parameters
+        ----------
+        sample_fs : bool, optional
+            If True, sample flux scaling factors; otherwise use mean values.
+
+        Returns
+        -------
+        tuple
+            Modeled visibilities and intermediate components.
+        """
 
         f_latents = parameters
 

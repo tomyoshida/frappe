@@ -34,3 +34,4 @@ Reference
    :members: model, observation, inference, results, plot
    :undoc-members:
    :show-inheritance:
+   :noindex:
