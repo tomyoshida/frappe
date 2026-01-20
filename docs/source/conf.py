@@ -21,8 +21,8 @@ author = 'Tomohiro C. Yoshida'
 
 extensions = [
     'autoapi.extension',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
+    #'sphinx.ext.autodoc',
+    #'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx_rtd_theme',
