@@ -26,10 +26,13 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx_rtd_theme',
+    'nbsphinx'
 ]
 
 autoapi_type = 'python'
 autoapi_dirs = ['../../frappe']  # ソースコードがあるディレクトリへのパス（conf.pyからの相対パス）
+
+nbsphinx_execute = 'never'
 
 # オプション：ドキュメントに含める内容の制御
 autoapi_options = [

@@ -3,6 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+====================
 frappe documentation
 ====================
 
@@ -12,4 +13,8 @@ Flexible Radial Analysis of ProtoPlanetary disk Emissions (FRAPPE) provides Gaus
    :maxdepth: 2
    :caption: Contents:
 
+   introduction
+   tutorial
+
    autoapi/index
+
