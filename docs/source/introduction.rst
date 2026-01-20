@@ -1,5 +1,5 @@
 ============
-introduction
+Introduction
 ============
 
 FRAPPE is a Python module for astronomical data analysis.
