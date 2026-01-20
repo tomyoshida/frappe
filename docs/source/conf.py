@@ -33,6 +33,7 @@ autoapi_type = 'python'
 autoapi_dirs = ['../../frappe']  # ソースコードがあるディレクトリへのパス（conf.pyからの相対パス）
 
 nbsphinx_execute = 'never'
+pygments_style = 'sphinx'
 
 # オプション：ドキュメントに含める内容の制御
 autoapi_options = [
