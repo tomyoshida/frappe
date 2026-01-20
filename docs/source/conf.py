@@ -20,11 +20,25 @@ author = 'Tomohiro C. Yoshida'
 
 
 extensions = [
+    'autoapi.extension',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx_rtd_theme',
+]
+
+autoapi_type = 'python'
+autoapi_dirs = ['../../frappe']  # ソースコードがあるディレクトリへのパス（conf.pyからの相対パス）
+
+# オプション：ドキュメントに含める内容の制御
+autoapi_options = [
+    'members',
+    'undoc-members',
+    'show-inheritance',
+    'show-module-summary',
+    'special-members',
+    #'imported-members',
 ]
 
 autosummary_generate = True
