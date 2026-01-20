@@ -30,15 +30,12 @@ extensions = [
 ]
 
 autoapi_type = 'python'
-autoapi_dirs = ['../../frappe']  # ソースコードがあるディレクトリへのパス（conf.pyからの相対パス）
+autoapi_dirs = ['../../frappe'] 
 
 nbsphinx_execute = 'never'
-
-nbsphinx_codecell_lexer = 'python3'
 pygments_style = 'sphinx'
-highlight_language = 'python3'
 
-# オプション：ドキュメントに含める内容の制御
+
 autoapi_options = [
     'members',
     'undoc-members',
@@ -77,7 +74,7 @@ autodoc_mock_imports = [
 ]
 
 templates_path = ['_templates']
-exclude_patterns = []
+exclude_patterns = ['_build', '**.ipynb_checkpoints']
 
 
 # -- Options for HTML output -------------------------------------------------
