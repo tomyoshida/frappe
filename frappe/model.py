@@ -329,9 +329,13 @@ class model:
 
                 for _obs in obs:
 
+                    V_final = _obs.V_model / f_band 
+
+                    numpyro.deterministic(f"V_final_{_obs.name}", V_final)
+
                     numpyro.sample(
                                 f"Y_observed_{_obs.name}",
-                                Normal(loc= _obs.V_model / f_band, scale= _obs.s ),
+                                Normal(loc= V_final, scale= _obs.s ),
                                 obs = _obs.V
                             )
 
