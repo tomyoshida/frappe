@@ -34,8 +34,6 @@ autoapi_type = 'python'
 autoapi_dirs = ['../../frappe'] 
 
 nbsphinx_execute = 'never'
-pygments_style = 'sphinx'
-
 
 autoapi_options = [
     'members',
