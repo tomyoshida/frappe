@@ -327,6 +327,8 @@ class model:
                 f_band = jnp.exp( jnp.log(self.mean_fs[band]) + _g_f_band * self.s_fs[band])
 
 
+                numpyro.deterministic(f"f_band_{band}", f_band)
+
                 for _obs in obs:
 
                     V_final = _obs.V_model / f_band 
