@@ -55,7 +55,7 @@ jax.config.update("jax_enable_x64", True)
 
 class model:
 
-    def __init__(self, incl, r_out, N_GP, userdef_vis_model = None, flux_uncert = True, jitter=1e-6, hyperparameters_fixed=False):
+    def __init__(self, incl, r_out, N_GP, userdef_vis_model = None, flux_uncert = True, jitter=1e-6, hyperparameters_fixed=True):
         '''
         incl: inclination angle in degrees
         r_in: inner radius in arcseconds
@@ -178,7 +178,7 @@ class model:
 
     def set_parameter(self, kind, free = True,  dust_prop = False, GP =True, 
                       bounds = (10, 20), mean_std = (0.0, 1.0),
-                      variance = 2.0, lengthscale = 0.3, mean = 0.0, 
+                      variance = 1.0, lengthscale = 0.3, mean = 0.0, 
                       profile = None):
         '''
         Set a parameter as free or fixed.
@@ -351,7 +351,7 @@ class model:
                                 obs = _obs.V
                             )
 
-    def set_observations( self, band, q, V, s, s_f, mean_fs,  nu, Nch ):
+    def set_observations( self, band, q, V, s, f_s, f_mean,  nu, Nch ):
         '''
         Set observations for a given band.
         band: string, name of the band
@@ -386,8 +386,8 @@ class model:
         self.bands.append(band)
             
         self.observations[band] = obs_tmp
-        self.s_fs[band] = s_f
-        self.mean_fs[band] = mean_fs
+        self.s_fs[band] = f_s
+        self.mean_fs[band] = f_mean
 
 
     def set_opacity( self, opac_dict, Na = 1000, Nq = 1000, smooth = True, log10_a_smooth = 0.05, a_min = None, a_max = None ):
@@ -698,7 +698,7 @@ class inference:
         return self.svi_map_results
 
 
-    def MCMC(self, num_warmup, num_samples, step_size = 0.1, num_chains = 1, max_tree_depth=10, adapt_step_size=True, uniform_radius = 0.1, seed = None):
+    def MCMC(self, num_warmup, num_samples, step_size = 1.0, num_chains = 1, max_tree_depth=10, adapt_step_size=True, uniform_radius = 0.1, seed = None):
 
         '''
         Run MCMC sampling using the NUTS algorithm.
