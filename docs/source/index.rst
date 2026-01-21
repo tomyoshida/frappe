@@ -14,7 +14,7 @@ Flexible Radial Analysis of ProtoPlanetary disk Emissions (FRAPPE) provides Gaus
    :caption: Contents:
 
    introduction
-   tutorial
+   tutorial_1
 
    autoapi/index
 
