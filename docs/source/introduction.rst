@@ -9,7 +9,7 @@ Background
 
 Astrophysical disks are amoung the most interesting object in astronomy; they provides unique information for revealing various stages of evolution of astrophysical objects. Amoung them, we are interested in **protoplanetary disks**.
 
-Protoplanetary disks are the birthplace of planetary systems. Planets and other objects form in those disks via coagulation of material such as dust grains. Therefore, in the field of planet formation, it is essential to characterize the proparties of dust grains, for instance, their temperature, spatial distribution, size distribution, as well as mineralogical and chemical compositions. To this end, we routainly perform radio-interferometric observations using e.g., the Atacama Large Millimeter/sub-millimeter Array (ALMA) and obtain the spectral energy distribution (SED) of the dust continuum thermal emission as a function of spatial frequency (a.k.a $(u, v)$ )) and electromagnetic frequency.
+Protoplanetary disks are the birthplace of planetary systems. Planets and other objects form in those disks via coagulation of material such as dust grains. Therefore, in the field of planet formation, it is essential to characterize the proparties of dust grains, for instance, their temperature, spatial distribution, size distribution, as well as mineralogical and chemical compositions. To this end, we routainly perform radio-interferometric observations using e.g., the Atacama Large Millimeter/sub-millimeter Array (ALMA) and obtain the spectral energy distribution (SED) of the dust continuum thermal emission as a function of spatial frequency (a.k.a (u, v) ) and electromagnetic frequency.
 
 Such data is the direct observable of the observations and called *interferometric visibility*.
 There are mainly two approaches to retrieve the physical quantities that we ultimately want to get;
@@ -26,10 +26,6 @@ To reveal the nature of the protoplanetary disks, we need another approach that 
 
 What can FRAPPE do?
 ===================
-
-
-Features
-========
 
 + Flexible modeling of radial profiles
 + Direct fit to the interferometric visibilities

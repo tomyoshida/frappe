@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-====================
-FRAPPE documentation
-====================
+=======================
+FRAPPE documentation 🍹
+=======================
 
 Do you have observation data of the dust continuum emission from a protoplanetary disk?
 **Flexible Radial Analysis of ProtoPlanetary disk Emissions (FRAPPE)** provides a easy-to-use tool to reterieve dust proparties, such as the dust surface density distribution, in protoplanetary disks.
