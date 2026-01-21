@@ -2,6 +2,7 @@
 from .model import *
 from .utilities import *
 from .constants import *
+from .msdata import *
 # from .prep import *
 
 # Version information

@@ -54,16 +54,26 @@ jax.config.update("jax_enable_x64", True)
 
 
 class model:
+    '''class for FRAPPE model
+
+    Attributes:
+        set_parameters: method to set model parameters
+        set_observations: method to set observational data
+        set_opacity: method to set dust opacity model
+    '''
 
     def __init__(self, incl, r_out, N_GP, userdef_vis_model = None, flux_uncert = True, jitter=1e-6, hyperparameters_fixed=True):
-        '''
-        incl: inclination angle in degrees
-        r_in: inner radius in arcseconds
-        r_out: outer radius in arcseconds
-        N_GP: number of Gaussian process points
-        userdef_vis_model: function, user-defined numpyro model to modify the visibility in Jy. Input: (V (Jy), nu (Hz)). For instance, to add free-free emission.
-        flux_uncert: boolean, whether to include flux calibration uncertainty
-        jitter: float, jitter value for numerical stability in Gaussian processes
+        '''initialize the model
+
+        Args:
+            incl (float): inclination angle in degrees
+            r_out (float): outer radius in arcseconds
+            N_GP (int): number of Gaussian process points
+            userdef_vis_model (function, optional): user-defined visibility model function. Defaults to None. The function should take (V, obs, f_latents) as arguments and return modified V.
+            flux_uncert (bool, optional): whether to include flux uncertainty. Defaults to True.
+            jitter (float, optional): jitter value for numerical stability. Defaults to 1e-6.
+            hyperparameters_fixed (bool, optional): whether to fix hyperparameters. Defaults to True.
+
         '''
         
         self.free_parameters = {}
@@ -180,15 +190,22 @@ class model:
                       bounds = (10, 20), mean_std = (0.0, 1.0),
                       variance = 1.0, lengthscale = 0.3, mean = 0.0, 
                       profile = None):
-        '''
-        Set a parameter as free or fixed.
-        kind: name of the parameter
-        free: boolean, whether the parameter is free or fixed
-        bounds: tuple, (min, max) bounds for the free parameter
-        mean_std: tuple, (mean, std) for the free parameter
-        g_variance_prior: float, prior variance for the Gaussian process
-        g_lengthscale_prior: float, prior lengthscale for the Gaussian process
-        profile: function or array, fixed profile for the parameter if not free
+        '''set a parameter as free or fixed.
+
+        This method allows you to define model parameters as either free (to be inferred) or fixed (with a specified profile).
+        
+        Args:
+            kind (str): name of the parameter
+            free (bool, optional): whether the parameter is free. Defaults to True.
+            dust_prop (bool, optional): whether the parameter is related to dust properties. Defaults to False.
+            GP (bool, optional): whether to use Gaussian process for the parameter. Defaults to True.
+            bounds (tuple, optional): (min, max) bounds for the parameter if GP is used. Defaults to (10, 20).
+            mean_std (tuple, optional): (mean, std) for the parameter if not using GP. Defaults to (0.0, 1.0).
+            variance (float, optional): variance for the GP kernel. Defaults to 1.0.
+            lengthscale (float, optional): lengthscale for the GP kernel. Defaults to 0.3.
+            mean (float, optional): mean for the GP prior. Defaults to 0.0.
+            profile (array or function, optional): fixed profile for the parameter if not free. Defaults to None.
+
         '''
     
         
@@ -352,16 +369,20 @@ class model:
                             )
 
     def set_observations( self, band, q, V, s, f_s, f_mean,  nu, Nch ):
-        '''
-        Set observations for a given band.
-        band: string, name of the band
-        q: array, spatial frequencies in 1/arcseconds
-        V: array, observed visibilities in Jy
-        s: array, uncertainties in visibilities in Jy
-        s_f: float, fractional uncertainty in flux calibration
-        mean_fs: float, mean flux scaling factor
-        nu: array, observing frequencies in Hz
-        Nch: int, number of channels 
+        '''set observations for a given band.
+
+        This method allows you to input observational data for a specific band, including spatial frequencies, visibilities, uncertainties, flux scaling factors, and frequencies.
+        
+        Args:
+            band (str): name of the observation band
+            q (dict): spatial frequencies in 1/arcsec. Should be a dictionary of arrays for each channel.
+            V (dict): observed visibilities in Jy. Should be a dictionary of arrays for each channel.
+            s (dict): uncertainties in Jy. Should be a dictionary of arrays for each channel.
+            f_s (float): flux scaling factor standard deviation
+            f_mean (float): mean flux scaling factor
+            nu (array): frequencies in Hz
+            Nch (int): number of channels. Shound be consistent with q, V, s.
+
         '''
 
         obs_tmp = []
@@ -391,15 +412,18 @@ class model:
 
 
     def set_opacity( self, opac_dict, Na = 1000, Nq = 1000, smooth = True, log10_a_smooth = 0.05, a_min = None, a_max = None ):
-        '''
-        Set dust opacity model.
-        opac_dict: dictionary containing dust opacity data with keys 'a', 'lam', 'k_abs', 'k_sca', 'g'
-        Na: int, number of points for grain size interpolation
-        Nq: int, number of points for q interpolation
-        smooth: boolean, whether to apply Gaussian smoothing to the opacity data
-        log10_a_smooth: float, standard deviation for Gaussian smoothing in log10 grain size 
-        a_min: float, minimum grain size in microns in the opacity interpolator
-        a_max: float, maximum grain size in microns in an opacity interpolator
+        '''Set dust opacity model.
+        
+        This method allows you to define the dust opacity model using precomputed opacity data.
+
+        Args:
+            opac_dict (dict): dictionary containing dust opacity data with keys 'a', 'lam', 'k_abs', 'k_sca', 'g'
+            Na (int, optional): number of dust size grid points. Defaults to 1000.
+            Nq (int, optional): number of size distribution index grid points. Defaults to 1000.
+            smooth (bool, optional): whether to apply smoothing to the opacity table. Defaults to True.
+            log10_a_smooth (float, optional): smoothing scale in log10 grain size. Defaults to 0.05.
+            a_min (float, optional): minimum grain size in microns. Defaults to the minimum grain size in the opacity data.
+            a_max (float, optional): maximum grain size in microns. Defaults to the maximum grain size in the opacity data. 
         '''
         
         a      = opac_dict['a']
@@ -466,18 +490,17 @@ class model:
                 
 
     def calc_model( self, parameters ):
-        """
-        Compute model visibilities using the current parameters.
+        """Compute model visibilities using the current parameters.
 
-        Parameters
-        ----------
-        sample_fs : bool, optional
-            If True, sample flux scaling factors; otherwise use mean values.
+        This method calculates the model visibilities and intensities for all observations based on the provided parameters.
 
-        Returns
-        -------
-        tuple
-            Modeled visibilities and intermediate components.
+        Args:
+            parameters (dict): dictionary of model parameters. Should contain keys corresponding to free and fixed parameters.
+
+        Returns:
+            V_res (dict): dictionary of model visibilities for each band and observation.
+            I_res (dict): dictionary of model intensities for each band and observation.
+
         """
 
         f_latents = parameters
@@ -514,7 +537,7 @@ class model:
         return V_res, I_res
     
 
-    def g_to_f( self, g_samples ):
+    def _g_to_f( self, g_samples ):
 
          # 物理パラメータ (f_samples) への変換処理
         f_samples = {}
@@ -540,6 +563,13 @@ class observation:
         
 
 class inference:
+    '''class for inference methods
+    
+    Attributes:
+        prior: method to show prior distributions
+        SVI_MAP: method to run SVI for MAP estimation
+        MCMC: method to run MCMC sampling
+    '''
 
     def __init__(self, model ):
 
@@ -547,13 +577,17 @@ class inference:
 
 
     def prior(self, num_samples = 1, seed = None):
-        '''
-        Show prior distributions for the latent parameters.
-        num_samples: number of prior samples to generate
-        jitter: jitter value for numerical stability
-        log: boolean, whether to plot in log scale
-        lw: line width for the plots
-        alpha: transparency for the plots
+        '''Show prior distributions for the latent parameters.
+
+        This method generates samples from the prior distributions of the latent parameters defined in the model.
+
+        Args:
+            num_samples (int, optional): number of prior samples to generate. Defaults to 1.
+            seed (int, optional): random seed for reproducibility. Defaults to None.
+
+        Returns:
+            prior (results): results object containing prior samples and related information.
+
         '''
 
         if seed is None:
@@ -621,13 +655,20 @@ class inference:
         return self._prior
     
     def SVI_MAP(self, num_iterations=1000, num_particles=1, adam_lr=0.01, uniform_radius = 0.1, seed = None):
-        '''
-        Run Stochastic Variational Inference (SVI) to find the Maximum A Posteriori (MAP) estimate of the latent parameters.
-        rng_key: JAX random key
-        num_iterations: number of SVI iterations
-        num_particles: number of particles for ELBO estimation
-        adam_lr: learning rate for the Adam optimizer
-        uniform_radius: radius for uniform initialization
+        '''Run Stochastic Variational Inference (SVI) to find the Maximum A Posteriori (MAP) estimate of the latent parameters.
+        
+        This method uses SVI with an AutoDelta guide to estimate the MAP of the latent parameters defined in the model.
+
+        Args:
+            num_iterations (int, optional): number of SVI iterations. Defaults to 1000
+            num_particles (int, optional): number of particles for ELBO estimation. Defaults to 1.
+            adam_lr (float, optional): learning rate for the Adam optimizer. Defaults to 0.01.
+            uniform_radius (float, optional): radius for uniform initialization of parameters. Defaults to 0.1.
+            seed (int, optional): random seed for reproducibility. Defaults to None.
+
+        Returns:
+            svi_map_results (results): results object containing MAP estimates and related information.
+
         '''
 
         if seed is None:
@@ -699,17 +740,22 @@ class inference:
 
 
     def MCMC(self, num_warmup, num_samples, step_size = 1.0, num_chains = 1, max_tree_depth=10, adapt_step_size=True, uniform_radius = 0.1, seed = None):
+        '''Run MCMC sampling using the NUTS algorithm.
+        
+        This method performs MCMC sampling to estimate the posterior distributions of the latent parameters defined in the model.
 
-        '''
-        Run MCMC sampling using the NUTS algorithm.
-        num_warmup: number of warmup steps
-        num_samples: number of MCMC samples
-        step_size: initial step size for NUTS
-        num_chains: number of MCMC chains
-        max_tree_depth: maximum tree depth for NUTS
-        adapt_step_size: boolean, whether to adapt the step size during warmup
-        uniform_radius: radius for uniform initialization
-        seed: random seed
+        Args:
+            num_warmup (int): number of warmup iterations.
+            num_samples (int): number of MCMC samples to draw.
+            step_size (float, optional): initial step size for the NUTS sampler. Defaults to 1.0.
+            num_chains (int, optional): number of MCMC chains to run in parallel. Defaults to 1.
+            max_tree_depth (int, optional): maximum tree depth for the NUTS sampler. Defaults to 10.
+            adapt_step_size (bool, optional): whether to adapt the step size during warmup. Defaults to True.
+            uniform_radius (float, optional): radius for uniform initialization of parameters. Defaults to 0.1.
+            seed (int, optional): random seed for reproducibility. Defaults to None.
+
+        Returns:
+            mcmc_results (results): results object containing posterior samples and related information.
         '''
 
         if seed is None:
@@ -773,8 +819,8 @@ class inference:
         posterior_logP = -mcmc.get_extra_fields(group_by_chain=True)['potential_energy']
 
 
-        f_warmup_samples = self.model.g_to_f( g_warmup_samples )
-        f_posterior_samples = self.model.g_to_f( g_posterior_samples )
+        f_warmup_samples = self.model._g_to_f( g_warmup_samples )
+        f_posterior_samples = self.model._g_to_f( g_posterior_samples )
         
 
         self.mcmc_results = results(  r = self.model.r_GP, 
@@ -792,6 +838,13 @@ class inference:
 
 
 class results:
+    '''class for storing inference results
+
+    Attributes:
+        r: radial grid points
+        sample: dictionary of samples
+        logP: dictionary of log probabilities
+    '''
 
     def __init__(self, r, sample, logP):
         self.r = r
@@ -800,6 +853,10 @@ class results:
 
 
 class plot:
+    '''class for plotting results
+    Attributes:
+        sample_paths: method to plot sample paths
+    ''' 
 
     def __init__(self, results ):
         self.r =  results.r
@@ -828,11 +885,16 @@ class plot:
 
 
     def sample_paths( self, key, nskip = 100, plot_kwargs = {'alpha': 0.5, 'lw': 1.0, 'color':'royalblue'}, scatter_kwargs = {'alpha': 0.5, 'color':'royalblue'} ):
-        '''
-        Plot sample paths from the prior or posterior samples.
-        key: string, key in the sample dictionary to plot
-        nskip: int, number of samples to skip for plotting
-        kwargs: additional keyword arguments for matplotlib plot function
+        '''Plot sample paths for a given parameter key.
+
+        Args:
+            key (str): parameter key to plot
+            nskip (int, optional): number of samples to skip for plotting. Defaults to 100.
+            plot_kwargs (dict, optional): keyword arguments for line plots. Defaults to {'alpha': 0.5, 'lw': 1.0, 'color':'roayalblue'}.
+            scatter_kwargs (dict, optional): keyword arguments for scatter plots. Defaults to {'alpha': 0.5, 'color':'royalblue'}.  
+            
+        Returns:
+            None
         ''' 
 
         _samples = self.sample[key]
