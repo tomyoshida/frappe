@@ -1,8 +1,13 @@
-============
-Introduction
-============
+==============================
+Introduction - What is FRAPPE?
+==============================
 
-FRAPPE is a Python module for astronomical data analysis.
+FRAPPE is a Python module for astronomical data analysis. In this page, we'll describe overview of this tool.
+
+Background
+==========
+
+
 
 Features
 ========

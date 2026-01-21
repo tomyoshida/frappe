@@ -26,24 +26,6 @@ def check_range(x, lower, upper, alpha=10.0):
                 jnp.where(x > upper, penalty_upper, 0.0))
     return penalty
 
-'''
-def check_range(x, lower, upper, alpha=100.0):
-    """
-    x, lower, upper が同じ形状の配列であることを想定。
-    境界を越えた各要素に対して、二乗ペナルティを計算します。
-    """
-    # x < lower の場合、(x - lower) は負の値。その分を二乗してペナルティ。
-    # x > upper の場合、(x - upper) は正の値。その分を二乗してペナルティ。
-    
-    # 配列の各要素に対して、はみ出した量（distance）を計算
-    dist_lower = jnp.where(x < lower, x - lower, 0.0)
-    dist_upper = jnp.where(x > upper, x - upper, 0.0)
-    
-    # 合計のペナルティ（各要素ごとの負の値の配列を返す）
-    # alpha * 0.5 * dist^2 は、境界で勾配が0から始まり、離れるほど強く戻る力になる
-    penalty = -0.5 * alpha * (jnp.square(dist_lower) + jnp.square(dist_upper))
-    return penalty
-'''
 
 
 def hankel_transform_0_jax(f, r, k, bessel):

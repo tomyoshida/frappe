@@ -4,10 +4,11 @@
    contain the root `toctree` directive.
 
 ====================
-frappe documentation
+FRAPPE documentation
 ====================
 
-Flexible Radial Analysis of ProtoPlanetary disk Emissions (FRAPPE) provides Gaussian-process-based models for analyzing interferometric visibilities and dust opacity. The docs below focus on the main modeling interface in ``frappe.model``.
+Do you have observation data of the dust continuum emission from a protoplanetary disk?
+**Flexible Radial Analysis of ProtoPlanetary disk Emissions (FRAPPE)** provides a easy-to-use tool to reterieve dust proparties, such as the dust surface density distribution, in protoplanetary disks.
 
 .. toctree::
    :maxdepth: 2
