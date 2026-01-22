@@ -608,7 +608,7 @@ class inference:
         g_func_all = {}
 
 
-        for i, (param_name, priors) in enumerate(self.model.free_parameters.items()):
+        for i, (param_name, priors) in enumerate(self.model._free_parameters.items()):
 
             rng_key, rng_key2 = jax.random.split(rng_key)
             prior_predictions = prior_predictive(rng_key)[f'g_{param_name}']
@@ -641,7 +641,7 @@ class inference:
                 g_func_all[param_name] = jnp.array([prior_predictions])
 
 
-        self._prior = results(  r = self.model.r_GP, 
+        self._prior = results(  r = self.model._r_GP, 
                                     sample = { 'prior_f': f_func_all,
                                                'prior_g': g_func_all,
                                             },
@@ -710,7 +710,7 @@ class inference:
         
 
         self.delta_medians = {}
-        for param_name, priors in self.model.free_parameters.items():
+        for param_name, priors in self.model._free_parameters.items():
             if priors['GP'] == False:
                 self.delta_medians[param_name] = map_estimates[param_name]
             else:
@@ -726,7 +726,7 @@ class inference:
                 )
                 self.delta_medians[param_name] = f_predictions
 
-        self.svi_map_results = results(  r = self.model.r_GP, 
+        self.svi_map_results = results(  r = self.model._r_GP, 
                                     sample = { 'MAP_g': map_estimates,
                                                'MAP_f': self.delta_medians,
                                             },
@@ -820,7 +820,7 @@ class inference:
         f_posterior_samples = self.model._g_to_f( g_posterior_samples )
         
 
-        self.mcmc_results = results(  r = self.model.r_GP, 
+        self.mcmc_results = results(  r = self.model._r_GP, 
                                     sample = { 'warmup_f': f_warmup_samples,
                                                   'posterior_f': f_posterior_samples,
                                                    'warmup_g': g_warmup_samples,
