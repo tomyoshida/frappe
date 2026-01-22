@@ -1,0 +1,15 @@
+/* 動画を親要素の幅に合わせ、はみ出しを防止する */
+video {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important; /* 縦横比を維持 */
+    display: block;
+    margin: 1em auto; /* 前後に余白を作り、中央に配置 */
+}
+
+/* スマホなど狭い画面での調整 */
+@media screen and (max-width: 768px) {
+    video {
+        width: 100% !important;
+    }
+}
