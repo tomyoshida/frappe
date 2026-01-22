@@ -18,3 +18,7 @@ video {
 .center {
     text-align: center;
 }
+
+.tight-caption {
+    margin-top: -15px; /* ここの数字で間隔を調整 */
+}
