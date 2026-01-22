@@ -103,7 +103,6 @@ class model:
         self.mean_fs = {}
         self.bands = []
 
-        self.dust_params = []
 
         self.userdef_vis_model = userdef_vis_model
 
@@ -186,7 +185,7 @@ class model:
         return f_latents
 
 
-    def set_parameter(self, kind, free = True,  dust_prop = False, GP =True, 
+    def set_parameter(self, kind, free = True, GP =True, 
                       bounds = (10, 20), mean_std = (0.0, 1.0),
                       variance = 1.0, lengthscale = 0.3, mean = 0.0, 
                       profile = None):
@@ -231,8 +230,6 @@ class model:
             else:
                 raise ValueError(f'Profile for {kind} is not set.')
 
-        if dust_prop:
-            self.dust_params.append( kind )
 
     def _expansion_model( self, f_latents, obs, dryrun = False):
         '''
@@ -902,6 +899,8 @@ class plot:
         N_panel = len( _samples.keys() )
 
         fig, axes = plt.subplots(N_panel,1, figsize=(10, 4*N_panel), sharex=True )
+
+        axes = np.atleast_1d(axes)
 
         for i, param_name in enumerate( _samples.keys() ):
 

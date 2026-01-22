@@ -1,5 +1,3 @@
-import casatools as ctool
-import casatasks as ct
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,6 +17,10 @@ import glob
 from scipy.stats import binned_statistic_2d
 
 class ms:
+
+    def __init__(self, casatools, casatasks):
+        self.ctool = casatools
+        self.ct = casatasks
 
     def _leastsq(self, nu, nu0, I, sigma):
 
@@ -65,7 +67,7 @@ class ms:
             tuple: A tuple containing the base name of the measurement set and an array of spectral window IDs.
         '''
 
-        tb = ctool.table()
+        tb = self.ctool.table()
         tb.open(vis + '/DATA_DESCRIPTION')
         spw_id = tb.getcol('SPECTRAL_WINDOW_ID')
         tb.close()
@@ -120,7 +122,7 @@ class ms:
                 os.system('rm -rf ' + outputvis)
 
                 try:
-                    ct.split(
+                    self.ct.split(
                         vis = vis,
                         outputvis = outputvis,
                         spw = f'{spw}',
@@ -128,7 +130,7 @@ class ms:
                         datacolumn = 'CORRECTED_DATA'
                     )
                 except:
-                    ct.split(
+                    self.ct.split(
                         vis = vis,
                         outputvis = outputvis,
                         spw = f'{spw}',
@@ -221,7 +223,7 @@ class ms:
 
     def _load_visibility( self, vis ):
         
-        tb = ctool.table()
+        tb = self.ctool.table()
         tb.open(vis)
         
         u,v,w = tb.getcol('UVW')
@@ -253,7 +255,7 @@ class ms:
         
     def _load_chan_freqs(self, vis ):
         
-        tb = ctool.table()
+        tb = self.ctool.table()
         
         tb.open(vis + '/SPECTRAL_WINDOW')
         chan_freq = tb.getcol('CHAN_FREQ')
