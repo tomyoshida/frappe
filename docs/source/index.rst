@@ -12,6 +12,7 @@ Do you have observation data of the dust continuum emission from a protoplanetar
 
 
 .. video:: _static/demo.mp4
+   :width: 100%
    :autoplay:
    :loop:
    :muted:
