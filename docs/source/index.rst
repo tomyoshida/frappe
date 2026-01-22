@@ -11,14 +11,18 @@ Do you have observational data of the dust continuum emission from a protoplanet
 **Flexible Radial Analysis of ProtoPlanetary disk Emissions (FRAPPE)** provides an easy-to-use tool to retrieve dust properties, such as the dust surface density distribution, in protoplanetary disks.
 
 
-.. video:: _static/demo.mp4
-   :width: 100%
-   :autoplay:
-   :loop:
-   :muted:
-   :nocontrols:
+.. container:: video-wrapper
 
-   Animation of the posterior sampling process for dust surface density with FRAPPE.
+   .. video:: _static/demo.mp4
+      :width: 100%
+      :autoplay:
+      :loop:
+      :muted:
+      :nocontrols:
+
+   .. raw:: html
+
+      <p class="caption">Animation of the posterior sampling process for dust surface density with FRAPPE.</p>
 
 .. toctree::
    :maxdepth: 2
