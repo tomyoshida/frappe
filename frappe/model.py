@@ -5,16 +5,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import astropy.constants as cst
-
-
-c = cst.c.cgs.value
-k_B = cst.k_B.cgs.value
-h = cst.h.cgs.value
-au = cst.au.cgs.value
-G = cst.G.cgs.value
-M_sun = cst.M_sun.cgs.value
-m_p = cst.m_p.cgs.value
 
 import jax
 import jax.numpy as jnp
@@ -248,7 +238,7 @@ class model:
         k_abs_tot = 10**obs.log10_k_abs_tot_itp( (log10_a_max, q) )
         k_sca_eff_tot = 10**obs.log10_k_sca_eff_tot_itp( (log10_a_max, q) )
         
-        _I = f_I(obs.nu, self._incl, T, Sigma_d, k_abs_tot, k_sca_eff_tot )
+        _I = f_I(obs._nu, self._incl, T, Sigma_d, k_abs_tot, k_sca_eff_tot )
 
         # Hankel transform
         V = jnp.dot(obs.H, _I) / 1e-23 # Jy
@@ -347,12 +337,12 @@ class model:
 
                     V_final = _obs.V_model / f_band 
 
-                    numpyro.deterministic(f"V_final_{_obs.name}", V_final)
+                    numpyro.deterministic(f"V_final_{_obs._name}", V_final)
 
                     numpyro.sample(
-                                f"Y_observed_{_obs.name}",
-                                Normal(loc= V_final, scale= _obs.s ),
-                                obs = _obs.V
+                                f"Y_observed_{_obs._name}",
+                                Normal(loc= V_final, scale= _obs._s),
+                                obs = _obs._V
                             )
 
             else:
@@ -360,9 +350,9 @@ class model:
                 for _obs in obs:
 
                     numpyro.sample(
-                                f"Y_observed_{_obs.name}",
-                                Normal(loc= _obs.V_model, scale= _obs.s ),
-                                obs = _obs.V
+                                f"Y_observed_{_obs._name}",
+                                Normal(loc= _obs.V_model, scale= _obs._s),
+                                obs = _obs._V
                             )
 
     def set_observations( self, band, q, V, s, f_s, f_mean,  nu, Nch ):
@@ -393,7 +383,7 @@ class model:
             #kr_matrix = _obs.q[:, jnp.newaxis] * _obs.r_rad[jnp.newaxis, :]
         
 
-            arg = 2.0 * jnp.pi* _obs.q[:, None] * self._r_out_rad * self._j0k[None, :] / self._j0N_plus
+            arg = 2.0 * jnp.pi* _obs._q[:, None] * self._r_out_rad * self._j0k[None, :] / self._j0N_plus
 
             H = self._HT_prefactor * J0(arg)
  
@@ -456,7 +446,7 @@ class model:
             
             for _obs in obs:
 
-                lam0 = c/_obs.nu
+                lam0 = c/_obs._nu
 
                 log10_k_abs_tot, log10_k_sca_eff_tot = create_opacity_table( lam, a, k_abs, k_sca_eff, lam0, log10_a_dense, q_dense, smooth=smooth, 
                                                                             log10_a_smooth=log10_a_smooth, log10_a_min = jnp.log10(a_dense[0]) )
@@ -527,8 +517,8 @@ class model:
 
 
 
-                V_res[band][_obs.name] = jnp.array(_V_res)
-                I_res[band][_obs.name] = jnp.array(_I_res)
+                V_res[band][_obs._name] = jnp.array(_V_res)
+                I_res[band][_obs._name] = jnp.array(_I_res)
 
 
         return V_res, I_res
@@ -549,14 +539,26 @@ class model:
 
 
 class observation:
+    '''class for observation data
+
+    '''
 
     def __init__(self, name, nu, q, V, s ):
+        '''initialize observation data
+        
+        Args:
+            name (str): name of the observation
+            nu (float): frequency in Hz
+            q (array): spatial frequencies in 1/arcsec
+            V (array): observed visibilities in Jy
+            s (array): uncertainties in Jy
+        '''
 
-        self.name = name
-        self.nu = nu
-        self.q =  jax.device_put(jnp.asarray(q))
-        self.V =  jax.device_put(jnp.asarray(V))
-        self.s =  jax.device_put(jnp.asarray(s))
+        self._name = name
+        self._nu = nu
+        self._q =  jax.device_put(jnp.asarray(q))
+        self._V =  jax.device_put(jnp.asarray(V))
+        self._s =  jax.device_put(jnp.asarray(s))
         
 
 class inference:

@@ -1,14 +1,8 @@
 
 import numpy as np
-
-import astropy.constants as cst
-
 import pickle
-
 import os
 
-
-c = cst.c.cgs.value
 
 
 
