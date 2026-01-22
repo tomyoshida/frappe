@@ -40,8 +40,8 @@ from numpyro.optim import Adam
 from numpyro.infer.autoguide import AutoDelta
 
 
-from .constants import *
-from .utilities import *
+from ._constants import *
+from ._utilities import *
 
 from scipy.special import j0 as J0
 from scipy.special import j1 as J1
@@ -76,39 +76,39 @@ class model:
 
         '''
         
-        self.free_parameters = {}
-        self.Nparams_forGP = 0
-        self.fixed_parameters = {}
+        self._free_parameters = {}
+        self._Nparams_forGP = 0
+        self._fixed_parameters = {}
 
-        self.r_out = r_out
-        self.r_out_rad = jnp.deg2rad( self.r_out/3600 )
+        self._r_out = r_out
+        self._r_out_rad = jnp.deg2rad( self._r_out/3600 )
 
-        self.N_GP = N_GP
-        self.j0_zeros = jn_zeros(0, self.N_GP + 1)
-        self.j0N_plus = self.j0_zeros[-1]
-        self.j0k = self.j0_zeros[:-1]
+        self._N_GP = N_GP
+        self._j0_zeros = jn_zeros(0, self._N_GP + 1)
+        self._j0N_plus = self._j0_zeros[-1]
+        self._j0k = self._j0_zeros[:-1]
         
-        self.r_GP = self.r_out * self.j0k / self.j0N_plus
-        self.r_GP_rad = np.deg2rad(self.r_GP/3600)
+        self._r_GP = self._r_out * self._j0k / self._j0N_plus
+        self._r_GP_rad = np.deg2rad(self._r_GP/3600)
 
-        self.HT_prefactor = 4.0 * np.pi * self.r_out_rad ** 2/ (self.j0N_plus ** 2 * J1(self.j0k) ** 2)
+        self._HT_prefactor = 4.0 * np.pi * self._r_out_rad ** 2/ (self._j0N_plus ** 2 * J1(self._j0k) ** 2)
    
-        self.jitter = jitter
+        self._jitter = jitter
 
-        self.incl = np.deg2rad(incl)
+        self._incl = np.deg2rad(incl)
 
         
-        self.observations = {}
-        self.s_fs = {}
-        self.mean_fs = {}
-        self.bands = []
+        self._observations = {}
+        self._s_fs = {}
+        self._mean_fs = {}
+        self._bands = []
 
 
-        self.userdef_vis_model = userdef_vis_model
+        self._userdef_vis_model = userdef_vis_model
 
-        self.flux_uncert = flux_uncert
+        self._flux_uncert = flux_uncert
 
-        self.hyperparameters_fixed = hyperparameters_fixed
+        self._hyperparameters_fixed = hyperparameters_fixed
 
                 
 
@@ -119,11 +119,11 @@ class model:
         Returns a dictionary of latent parameters.
         '''
     
-        R = self.r_GP[:, None]
+        R = self._r_GP[:, None]
 
-        if not self.hyperparameters_fixed:
+        if not self._hyperparameters_fixed:
 
-            priors = self.free_parameters['log10_Sigma_d']
+            priors = self._free_parameters['log10_Sigma_d']
 
             _g_variance = priors['g_variance'] + (numpyro.sample(f"variance", Uniform(-1.0, 1.0)) + 1.0) / 2.0 * ( 1.0 - priors['g_variance'] )
             _g_lengthscale = priors['g_lengthscale'] + (numpyro.sample(f"lengthscale", Uniform(-1.0, 1.0)) + 1.0) / 2.0 * ( jnp.max(R)/4.0 - priors['g_lengthscale'] )
@@ -133,18 +133,18 @@ class model:
         f_latents = {}
     
         
-        for param_name, priors in self.free_parameters.items():
+        for param_name, priors in self._free_parameters.items():
 
             if priors['GP'] == True:
                 
-                if self.hyperparameters_fixed:
+                if self._hyperparameters_fixed:
                     _g_variance = priors['g_variance']
                     _g_lengthscale = priors['g_lengthscale']
                     _g_mean = priors['g_mean']
 
                 
                 K = rbf_kernel(R, R, _g_variance, _g_lengthscale)
-                K += jnp.eye(R.shape[0]) * self.jitter
+                K += jnp.eye(R.shape[0]) * self._jitter
                 L_K = jnp.linalg.cholesky(K)
 
                 
@@ -178,7 +178,7 @@ class model:
                 numpyro.deterministic(f'{param_name}', f_latents[param_name])
 
         
-        for param_name, profile in self.fixed_parameters.items():
+        for param_name, profile in self._fixed_parameters.items():
             f_latents[param_name] = profile['profile']
         
     
@@ -210,23 +210,23 @@ class model:
         
         if free:
 
-            self.free_parameters[kind] = { 'f_min' : bounds[0], 'f_max' : bounds[1], 'GP' : GP,
+            self._free_parameters[kind] = { 'f_min' : bounds[0], 'f_max' : bounds[1], 'GP' : GP,
                                           'f_s' : mean_std[1], 'f_mean' : mean_std[0],
                                            'g_variance':variance,
                                            'g_lengthscale':lengthscale, 
                                            'g_mean':mean }
             
             if GP:
-                self.Nparams_forGP += 1
+                self._Nparams_forGP += 1
             
 
         else:
             if profile is not None:
                 
                 if callable(profile):
-                    self.fixed_parameters[kind] = { 'profile' : profile(self.r_GP), 'GP' : GP, }        
+                    self._fixed_parameters[kind] = { 'profile' : profile(self._r_GP), 'GP' : GP, }        
                 else:
-                    self.fixed_parameters[kind] = { 'profile' : profile, 'GP' : GP, }
+                    self._fixed_parameters[kind] = { 'profile' : profile, 'GP' : GP, }
             else:
                 raise ValueError(f'Profile for {kind} is not set.')
 
@@ -248,13 +248,13 @@ class model:
         k_abs_tot = 10**obs.log10_k_abs_tot_itp( (log10_a_max, q) )
         k_sca_eff_tot = 10**obs.log10_k_sca_eff_tot_itp( (log10_a_max, q) )
         
-        _I = f_I(obs.nu, self.incl, T, Sigma_d, k_abs_tot, k_sca_eff_tot )
+        _I = f_I(obs.nu, self._incl, T, Sigma_d, k_abs_tot, k_sca_eff_tot )
 
         # Hankel transform
         V = jnp.dot(obs.H, _I) / 1e-23 # Jy
 
-        if self.userdef_vis_model is not None:
-            V = self.userdef_vis_model( V, obs, f_latents )
+        if self._userdef_vis_model is not None:
+            V = self._userdef_vis_model( V, obs, f_latents )
 
         if dryrun:
 
@@ -271,9 +271,9 @@ class model:
         f_latents: dictionary of latent parameters
         '''
 
-        for band in self.bands:
+        for band in self._bands:
             
-            obs = self.observations[band]
+            obs = self._observations[band]
             
             for _obs in obs:
 
@@ -300,11 +300,11 @@ class model:
         Sample the model for all observations.
         '''
         
-        for band in self.bands:
+        for band in self._bands:
             
-            obs = self.observations[band]
+            obs = self._observations[band]
 
-            if self.flux_uncert:
+            if self._flux_uncert:
 
                 
                 '''    
@@ -313,8 +313,8 @@ class model:
                             TruncatedNormal(
                                 loc=0,
                                 scale = 1.0,
-                                low= -self.s_fs_max_sigma[band],
-                                high= self.s_fs_max_sigma[band]
+                                low= -self._s_fs_max_sigma[band],
+                                high= self._s_fs_max_sigma[band]
                             )
                         )
 
@@ -323,11 +323,11 @@ class model:
                 '''        
                 f_band = sigmoid_transform(
                     _g_f_band,
-                    min_val= 1.0 - 3*self.s_fs[band], 
-                    max_val= 1.0 + 3*self.s_fs[band]
+                    min_val= 1.0 - 3*self._s_fs[band], 
+                    max_val= 1.0 + 3*self._s_fs[band]
                 )
                 '''
-                # f_band = 1.0 + _g_f_band*self.s_fs[band]
+                # f_band = 1.0 + _g_f_band*self._s_fs[band]
 
 
                 # 標準正規分布からサンプリング
@@ -338,7 +338,7 @@ class model:
 
                 # 指数変換することで対数正規分布にする
                 # f_band = exp(0 + 0.1 * standard_normal)
-                f_band = jnp.exp( jnp.log(self.mean_fs[band]) + _g_f_band * self.s_fs[band])
+                f_band = jnp.exp( jnp.log(self._mean_fs[band]) + _g_f_band * self._s_fs[band])
 
 
                 numpyro.deterministic(f"f_band_{band}", f_band)
@@ -388,24 +388,24 @@ class model:
             
             _obs = observation( f'{band}_ch_{nch}', nu[nch], q[nch], V[nch], s[nch] )
 
-            #_obs.r_rad = jnp.arange( jnp.min(jnp.deg2rad(self.r_GP/3600)), jnp.max(jnp.deg2rad(self.r_GP/3600)), 1/jnp.max(_obs.q)/self.ndr )
+            #_obs.r_rad = jnp.arange( jnp.min(jnp.deg2rad(self._r_GP/3600)), jnp.max(jnp.deg2rad(self._r_GP/3600)), 1/jnp.max(_obs.q)/self.ndr )
 
             #kr_matrix = _obs.q[:, jnp.newaxis] * _obs.r_rad[jnp.newaxis, :]
         
 
-            arg = 2.0 * jnp.pi* _obs.q[:, None] * self.r_out_rad * self.j0k[None, :] / self.j0N_plus
+            arg = 2.0 * jnp.pi* _obs.q[:, None] * self._r_out_rad * self._j0k[None, :] / self._j0N_plus
 
-            H = self.HT_prefactor * J0(arg)
+            H = self._HT_prefactor * J0(arg)
  
             _obs.H = H
             
             obs_tmp.append( _obs )
             
-        self.bands.append(band)
+        self._bands.append(band)
             
-        self.observations[band] = obs_tmp
-        self.s_fs[band] = f_s
-        self.mean_fs[band] = f_mean
+        self._observations[band] = obs_tmp
+        self._s_fs[band] = f_s
+        self._mean_fs[band] = f_mean
 
 
     def set_opacity( self, opac_dict, Na = 1000, Nq = 1000, smooth = True, log10_a_smooth = 0.05, a_min = None, a_max = None ):
@@ -450,9 +450,9 @@ class model:
 
         
 
-        for band in self.bands:
+        for band in self._bands:
             
-            obs = self.observations[band]
+            obs = self._observations[band]
             
             for _obs in obs:
 
@@ -510,12 +510,12 @@ class model:
         I_res = {}
         
         
-        for band in self.bands:
+        for band in self._bands:
             
             V_res[band] = {}
             I_res[band] = {}
             
-            obs = self.observations[band]
+            obs = self._observations[band]
 
             for _obs in obs:
 
@@ -538,7 +538,7 @@ class model:
 
          # 物理パラメータ (f_samples) への変換処理
         f_samples = {}
-        for param_name, priors in self.free_parameters.items():
+        for param_name, priors in self._free_parameters.items():
             if priors['GP'] == False:
                 f_samples[param_name] = g_samples[f'{param_name}']
             else:

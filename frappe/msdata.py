@@ -1,9 +1,7 @@
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 import astropy.constants as cst
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 import pickle
 
@@ -13,12 +11,20 @@ import os
 c = cst.c.cgs.value
 
 
-import glob
-from scipy.stats import binned_statistic_2d
 
 class ms:
 
+    '''Class for handling measurement set data using CASA tools.
+    
+    '''
+
     def __init__(self, casatools, casatasks):
+        '''Class for handling measurement set data using CASA tools.
+        
+        Args:
+            casatools: CASA casatools module.
+            casatasks: CASA casatasks module.
+        '''
         self.ctool = casatools
         self.ct = casatasks
 

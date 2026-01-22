@@ -5,7 +5,7 @@ from astroquery.linelists.cdms import CDMS
 import jax
 import jax.numpy as jnp
 import numpy as np
-from .constants import *
+from ._constants import *
 from astropy import units as u
 import warnings
 import numpy as np

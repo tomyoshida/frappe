@@ -4,7 +4,7 @@ video {
     max-width: 100% !important;
     height: auto !important; /* 縦横比を維持 */
     display: block;
-    margin: 0.1em auto; /* 前後に余白を作り、中央に配置 */
+    margin: 0em auto; /* 前後に余白を作り、中央に配置 */
 }
 
 /* スマホなど狭い画面での調整 */
