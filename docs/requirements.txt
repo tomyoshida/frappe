@@ -2,3 +2,4 @@ sphinx-rtd-theme
 sphinx-autoapi
 nbsphinx
 ipython
+sphinxcontrib-video
