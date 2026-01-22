@@ -26,6 +26,8 @@ Do you have observational data of the dust continuum emission from a protoplanet
    :caption: Contents:
 
    introduction
+   installation
+   tutorial_0
    tutorial_1
 
    autoapi/index

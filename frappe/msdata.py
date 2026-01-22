@@ -4,7 +4,7 @@ import pickle
 import os
 
 
-
+from ._constants import *
 
 class ms:
 
@@ -266,7 +266,7 @@ class ms:
 
     def _deprojected_visibility(self, vis, pa, incl):
 
-        u, v, Re, sigma2, chan_freq, flag = self.load_visibility( vis )
+        u, v, Re, sigma2, chan_freq, flag = self._load_visibility( vis )
 
         pa = np.deg2rad(pa)
         incl = np.deg2rad(incl)
@@ -368,7 +368,7 @@ class ms:
         q_res = np.array([])
 
         for iq in range(Nq):
-            _, _, I_fit, I_err = leastsq(
+            _, _, I_fit, I_err = self._leastsq(
                 nu_dict[iq],
                 nu0,
                 Re_dict[iq],
