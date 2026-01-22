@@ -5,6 +5,11 @@ build:
   tools:
     python: "3.11"
 
+  jobs:
+    post_create_environment:
+      # pip自体を毎回アップグレードする時間を節約
+      - pip install --upgrade pip
+
 python:
   install:
     - requirements: docs/requirements.txt
