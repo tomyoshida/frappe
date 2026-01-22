@@ -18,7 +18,8 @@ Do you have observational data of the dust continuum emission from a protoplanet
    :muted:
    :nocontrols:
 
-.. container:: center
+.. p::
+   :class: center
 
    *Animation of the posterior sampling process for dust surface density with FRAPPE.*
 

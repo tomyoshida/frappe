@@ -13,3 +13,8 @@ video {
         width: 100% !important;
     }
 }
+
+
+.center {
+    text-align: center;
+}
