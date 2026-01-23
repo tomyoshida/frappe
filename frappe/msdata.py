@@ -117,8 +117,6 @@ class ms:
 
             for spw in spw_id:
 
-                outputvis = f'./working_{visname}/spw_id_{spw}.ms'
-
                 os.system('rm -rf ' + outputvis)
 
                 
@@ -129,8 +127,6 @@ class ms:
                         keepflags = False,
                         datacolumn = datacolumn 
                     )
-                    
-                outputvis_arr.append(outputvis)
         
             return outputvis_arr
         
