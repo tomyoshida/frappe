@@ -80,7 +80,7 @@ class ms:
 
 
 
-    def split(self, vis, dryrun=True):
+    def split(self, vis, datacolumn = 'CORRECTED_DATA', dryrun=True):
         '''split the measurement set by spectral windows.
 
         Args:
@@ -121,21 +121,13 @@ class ms:
 
                 os.system('rm -rf ' + outputvis)
 
-                try:
-                    self.ct.split(
+                
+                self.ct.split(
                         vis = vis,
                         outputvis = outputvis,
                         spw = f'{spw}',
                         keepflags = False,
-                        datacolumn = 'CORRECTED_DATA'
-                    )
-                except:
-                    self.ct.split(
-                        vis = vis,
-                        outputvis = outputvis,
-                        spw = f'{spw}',
-                        keepflags = False,
-                        datacolumn = 'DATA'
+                        datacolumn = datacolumn 
                     )
                     
                 outputvis_arr.append(outputvis)
