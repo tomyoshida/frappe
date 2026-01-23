@@ -46,9 +46,12 @@ class ms:
 
         n, m = X.shape
 
+        print(n, m )
+
         # residual variance
         sigma2_hat = np.sum((r / sigma)**2) / (n - m)
 
+        print(sigma2_hat)
         # covariance matrix
         cov = sigma2_hat * np.linalg.inv(XtX)
 
@@ -365,7 +368,6 @@ class ms:
                     s_dict[iq]
                 )
 
-                print( s_dict[iq] )
 
                 I_res = np.append( I_res, I_fit )
                 Ierr_res = np.append( Ierr_res, I_err )
