@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 import os
 
-
+from scipy.optimize import curve_fit
 from ._constants import *
 
 class ms:
@@ -24,39 +24,19 @@ class ms:
 
     def _leastsq(self, nu, nu0, I, sigma):
 
+        def model(x, a, b):
+            return a * x + b
+
         x = nu - nu0
         y = I
 
-        # design matrix
-        X = np.column_stack((x, np.ones_like(x)))
+        popt, pcov = curve_fit(model, x, y, p0=[0, np.mean(y)], sigma=sigma, absolute_sigma=True)
+        
+        a, b = popt
+        perr = np.sqrt(np.diag(pcov)) # 標準誤差
+        std_a, std_b = perr
 
-        # weighted (do not create diagonal matrix)
-        Xw = X / sigma[:, None]
-        yw = y / sigma
-
-        # coefficient estimation
-        XtX = Xw.T @ Xw
-        Xty = Xw.T @ yw
-        beta = np.linalg.solve(XtX, Xty)
-
-        a, b = beta
-
-        # residuals (original scale)
-        r = y - X @ beta
-
-        n, m = X.shape
-
-        # residual variance
-        sigma2_hat = np.sum((r / sigma)**2) / (n - m)
-
-        # covariance matrix
-        cov = sigma2_hat * np.linalg.inv(XtX)
-
-        print(np.diag(cov))
-        # standard deviation
-        std_a, std_b = np.sqrt(np.diag(cov))
-
-        return a, std_a, b, std_b  # b is I(nu = nu0)
+        return a, std_a, b, std_b
     
 
     def _get_visnames(self, vis):
