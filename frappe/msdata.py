@@ -365,6 +365,8 @@ class ms:
                     s_dict[iq]
                 )
 
+                print( s_dict[iq] )
+
                 I_res = np.append( I_res, I_fit )
                 Ierr_res = np.append( Ierr_res, I_err )
                 q_res = np.append(q_res, q_dict[iq])
