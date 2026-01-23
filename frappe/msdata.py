@@ -23,19 +23,20 @@ class ms:
         self.ct = casatasks
 
     def _leastsq(self, nu, nu0, I, sigma, maxfev = 10000):
-
+        
         def lin_model(x, a, b):
             return a * x + b
 
-        x = (nu - nu0)/1e9
-        y = I
+        x = (nu - nu0)/nu0
+        y = I / np.mean(I)
+        s = sigma / np.mean(I)
 
-        popt, pcov = curve_fit(lin_model, x, y, p0=[0, np.mean(y)], sigma=sigma, absolute_sigma=True, maxfev=maxfev)
-        
-        a, b = popt
+        popt, pcov = curve_fit(lin_model, x, y, p0=[0.0, 1.0], sigma= s , absolute_sigma=True, maxfev=maxfev)
+            
+        a, b = popt * np.mean(I)
         perr = np.sqrt(np.diag(pcov)) # 標準誤差
-        std_a, std_b = perr
-
+        std_a, std_b = perr * np.mean(I)
+    
         return a, std_a, b, std_b
     
 
@@ -338,14 +339,13 @@ class ms:
 
         for iq in range(Nq):
 
-            if len(nu_dict[iq]) > 2:
+            if len(np.unique(nu_dict[iq])) > 1:
                 _, _, I_fit, I_err = self._leastsq(
                     nu_dict[iq],
                     nu0,
                     Re_dict[iq],
                     s_dict[iq], maxfev
                 )
-
 
                 I_res = np.append( I_res, I_fit )
                 Ierr_res = np.append( Ierr_res, I_err )
