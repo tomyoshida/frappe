@@ -28,14 +28,16 @@ class ms:
             return a * x + b
 
         x = (nu - nu0)/nu0
-        y = I / np.mean(I)
-        s = sigma / np.mean(I)
+
+        normfac = np.mean(np.abs(I))
+        y = I / normfac
+        s = sigma / normfac
 
         popt, pcov = curve_fit(lin_model, x, y, p0=[0.0, 1.0], sigma= s , absolute_sigma=True, maxfev=maxfev)
             
-        a, b = popt * np.mean(I)
+        a, b = popt * normfac
         perr = np.sqrt(np.diag(pcov)) # 標準誤差
-        std_a, std_b = perr * np.mean(I)
+        std_a, std_b = perr * normfac
     
         return a, std_a, b, std_b
     
