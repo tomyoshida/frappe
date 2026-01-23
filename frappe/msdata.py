@@ -22,7 +22,7 @@ class ms:
         self.ctool = casatools
         self.ct = casatasks
 
-    def _leastsq(self, nu, nu0, I, sigma):
+    def _leastsq(self, nu, nu0, I, sigma, maxfev = 10000):
 
         def lin_model(x, a, b):
             return a * x + b
@@ -30,7 +30,7 @@ class ms:
         x = nu - nu0
         y = I
 
-        popt, pcov = curve_fit(lin_model, x, y, p0=[0, np.mean(y)], sigma=sigma, absolute_sigma=True)
+        popt, pcov = curve_fit(lin_model, x, y, p0=[0, np.mean(y)], sigma=sigma, absolute_sigma=True, maxfev=maxfev)
         
         a, b = popt
         perr = np.sqrt(np.diag(pcov)) # 標準誤差
@@ -112,7 +112,7 @@ class ms:
             return outputvis_arr
         
 
-    def get_visibilities_singlechan(self, vis, pa, incl, FoV, nu0):
+    def get_visibilities_singlechan(self, vis, pa, incl, FoV, nu0, maxfev = 10000 ):
         '''get one-dimensional deprojected visibilities and uncertainty as a function of uv-distance for a single measurement sets list.
 
         This function processes multiple measurement sets, deprojects the visibilities based on the provided position angle and inclination, azimuthally averages the data according to the specified field of view, and fits the visibilities by a linear function to extract intensity values and their uncertainties at a reference frequency.
@@ -144,13 +144,13 @@ class ms:
         
 
         q, V, s = self._process_q_nu_fit(
-            Re_dict, s_dict, nu_dict, q_dict, Nq, nu0
+            Re_dict, s_dict, nu_dict, q_dict, Nq, nu0, maxfev
         )
 
         return q, V, s
     
 
-    def get_visibilities(self, vis, nu, pa, incl, FoV, output, save = True):
+    def get_visibilities(self, vis, nu, pa, incl, FoV, output, save = True, maxfev = 10000):
         '''get one-dimensional deprojected visibilities and uncertainty as a function of uv-distance for multiple measurement set lists
         
         This function processes multiple sets of measurement sets, deprojects the visibilities based on the provided position angle and inclination, azimuthally averages the data according to the specified field of view, and fits the visibilities by a linear function to extract intensity values and their uncertainties at given reference frequencies.
@@ -180,7 +180,7 @@ class ms:
             vis_list = vis[inu]
             nu0 = nu[inu]
 
-            q[inu], V[inu], s[inu] = self.get_visibilities_singlechan(vis_list, pa, incl, FoV, nu0)
+            q[inu], V[inu], s[inu] = self.get_visibilities_singlechan(vis_list, pa, incl, FoV, nu0, maxfev)
 
         data = { 'q':q, 'V':V, 's':s, 'nu':nu, 'Nch':Nnu }
 
@@ -329,7 +329,7 @@ class ms:
 
 
 
-    def _process_q_nu_fit(self, Re_dict, s_dict, nu_dict, q_dict, Nq, nu0):
+    def _process_q_nu_fit(self, Re_dict, s_dict, nu_dict, q_dict, Nq, nu0, maxfev):
         
 
         I_res = np.array([])
@@ -343,7 +343,7 @@ class ms:
                     nu_dict[iq],
                     nu0,
                     Re_dict[iq],
-                    s_dict[iq]
+                    s_dict[iq], maxfev
                 )
 
 
