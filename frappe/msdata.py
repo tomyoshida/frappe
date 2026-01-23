@@ -46,16 +46,13 @@ class ms:
 
         n, m = X.shape
 
-        print( np.shape( Xw ))
-        print( np.sum(Xw))
-
-
         # residual variance
         sigma2_hat = np.sum((r / sigma)**2) / (n - m)
 
         # covariance matrix
         cov = sigma2_hat * np.linalg.inv(XtX)
 
+        print(np.diag(cov))
         # standard deviation
         std_a, std_b = np.sqrt(np.diag(cov))
 
@@ -84,7 +81,7 @@ class ms:
 
 
 
-    def split(self, vis, datacolumn = 'CORRECTED_DATA', dryrun=True):
+    def split(self, vis, datacolumn = 'CORRECTED', dryrun=True):
         '''split the measurement set by spectral windows.
 
         Args:
