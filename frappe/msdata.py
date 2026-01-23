@@ -356,16 +356,18 @@ class ms:
         q_res = np.array([])
 
         for iq in range(Nq):
-            _, _, I_fit, I_err = self._leastsq(
-                nu_dict[iq],
-                nu0,
-                Re_dict[iq],
-                s_dict[iq]
-            )
 
-            I_res = np.append( I_res, I_fit )
-            Ierr_res = np.append( Ierr_res, I_err )
-            q_res = np.append(q_res, q_dict[iq])
+            if len(nu_dict[iq]) > 2:
+                _, _, I_fit, I_err = self._leastsq(
+                    nu_dict[iq],
+                    nu0,
+                    Re_dict[iq],
+                    s_dict[iq]
+                )
+
+                I_res = np.append( I_res, I_fit )
+                Ierr_res = np.append( Ierr_res, I_err )
+                q_res = np.append(q_res, q_dict[iq])
 
         return q_res, I_res, Ierr_res
 
