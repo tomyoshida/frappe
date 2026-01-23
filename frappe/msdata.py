@@ -336,7 +336,7 @@ class ms:
 
             mask = q_index == iq
 
-            if mask.any():
+            if mask.sum() > 2:
                 Re_dict[iq_valid] = Re_all[mask]
                 s_dict[iq_valid] = np.sqrt(sigma2_all[mask])
                 nu_dict[iq_valid] = freq_all[mask]
