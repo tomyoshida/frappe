@@ -46,7 +46,9 @@ class ms:
 
         n, m = X.shape
 
-        print(Xw)
+        print( np.shape( Xw ))
+        print( np.sum(Xw))
+
 
         # residual variance
         sigma2_hat = np.sum((r / sigma)**2) / (n - m)
