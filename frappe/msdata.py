@@ -27,7 +27,7 @@ class ms:
         def lin_model(x, a, b):
             return a * x + b
 
-        x = nu - nu0
+        x = (nu - nu0)/1e9
         y = I
 
         popt, pcov = curve_fit(lin_model, x, y, p0=[0, np.mean(y)], sigma=sigma, absolute_sigma=True, maxfev=maxfev)
