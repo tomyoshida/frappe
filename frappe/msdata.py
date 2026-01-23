@@ -24,13 +24,13 @@ class ms:
 
     def _leastsq(self, nu, nu0, I, sigma):
 
-        def model(x, a, b):
+        def lin_model(x, a, b):
             return a * x + b
 
         x = nu - nu0
         y = I
 
-        popt, pcov = curve_fit(model, x, y, p0=[0, np.mean(y)], sigma=sigma, absolute_sigma=True)
+        popt, pcov = curve_fit(lin_model, x, y, p0=[0, np.mean(y)], sigma=sigma, absolute_sigma=True)
         
         a, b = popt
         perr = np.sqrt(np.diag(pcov)) # 標準誤差
