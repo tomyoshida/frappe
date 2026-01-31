@@ -132,7 +132,7 @@ class model:
                     _g_lengthscale = priors['g_lengthscale']
                     #_g_mean = priors['g_mean']
 
-                _g_mean = numpyro.sample(f"g_mean_{param_name}", Uniform(-3.0, 3.0))
+                _g_mean = numpyro.sample(f"g_mean_{param_name}", Normal(0, 1.0))
                 K = rbf_kernel(R, R, _g_variance, _g_lengthscale)
                 K += jnp.eye(R.shape[0]) * self._jitter
                 L_K = jnp.linalg.cholesky(K)
