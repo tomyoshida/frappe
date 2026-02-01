@@ -128,14 +128,17 @@ class model:
             if priors['GP'] == True:
                 
                 if self._hyperparameters_fixed:
-                    _g_variance = priors['g_variance']
-                    _g_lengthscale = priors['g_lengthscale']
+                    _g_variance1 = priors['g_variance_1']
+                    _g_lengthscale1 = priors['g_lengthscale_1']
+
+                    _g_variance2 = priors['g_variance_2']
+                    _g_lengthscale2 = priors['g_lengthscale_2']
                     #_g_mean = priors['g_mean']
 
-                _g_variance = priors['g_variance'] + (numpyro.sample(f"variance_{param_name}", Uniform(-1.0, 1.0)) + 1.0) / 2.0 * ( 1.0 - priors['g_variance'] )
+                #_g_variance = priors['g_variance'] + (numpyro.sample(f"variance_{param_name}", Uniform(-1.0, 1.0)) + 1.0) / 2.0 * ( 1.0 - priors['g_variance'] )
 
                 _g_mean = numpyro.sample(f"g_mean_{param_name}", Normal(0, 1.0))
-                K = rbf_kernel(R, R, _g_variance, _g_lengthscale)
+                K = rbf_kernel(R, R, _g_variance1, _g_lengthscale1) + rbf_kernel(R, R, _g_variance2, _g_lengthscale2)
                 K += jnp.eye(R.shape[0]) * self._jitter
                 L_K = jnp.linalg.cholesky(K)
 
@@ -179,7 +182,7 @@ class model:
 
     def set_parameter(self, kind, free = True, GP =True, 
                       bounds = (10, 20), mean_std = (0.0, 1.0),
-                      variance = 1.0, lengthscale = 0.3, mean = 0.0, 
+                      variance_1 = 1.0, lengthscale_1 = 0.3, variance_2 = 0.1, lengthscale_2 = 0.6, mean = 0.0, 
                       profile = None):
         '''set a parameter as free or fixed.
 
@@ -204,8 +207,10 @@ class model:
 
             self._free_parameters[kind] = { 'f_min' : bounds[0], 'f_max' : bounds[1], 'GP' : GP,
                                           'f_s' : mean_std[1], 'f_mean' : mean_std[0],
-                                           'g_variance':variance,
-                                           'g_lengthscale':lengthscale, 
+                                           'g_variance_1':variance_1,
+                                           'g_lengthscale_1':lengthscale_1, 
+                                            'g_variance_2':variance_2,
+                                            'g_lengthscale_2':lengthscale_2,
                                            'g_mean':mean }
             
             if GP:
