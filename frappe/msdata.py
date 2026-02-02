@@ -6,6 +6,8 @@ import os
 from scipy.optimize import curve_fit
 from ._constants import *
 
+from tqdm import tqdm
+
 class ms:
 
     '''Class for handling measurement set data using CASA tools.
@@ -391,7 +393,7 @@ class ms:
         Ierr_res = np.array([])
         q_res = np.array([])
 
-        for iq in range(Nq):
+        for iq in tqdm(range(Nq), desc="Processing fitting"):
 
             if len(np.unique(nu_dict[iq])) > 1:
                 _, _, I_fit, I_err = self._leastsq(
@@ -428,7 +430,7 @@ class ms:
             Ierr_res = np.array([])
             q_res = np.array([])
 
-            for iq in range(Nq):
+            for iq in tqdm(range(Nq), desc="Processing fitting"):
 
                 dq = (q_dict[iq] - q_cen[iq])/q_cen[iq]
 
@@ -438,7 +440,7 @@ class ms:
                         nu_dict[iq],
                         nu0,
                         Re_dict[iq],
-                        s_dict[iq], maxfev, rmse
+                        s_dict[iq], maxfev
                     )
 
                     I_res = np.append( I_res, I_fit )
