@@ -51,6 +51,35 @@ class ms:
     
         return a, std_a, b, std_b
     
+    def _leastsq_2d(self, dq, nu, nu0, I, sigma, maxfev=10000):
+        """
+        q, nu の2変数を用いた2次元最小二乗法フィッティング
+        モデル: I(q, nu) = c0*q + c1*((nu-nu0)/nu0) + c2
+        """
+        def plane_model(coords, c0, c1, c2):
+            dq, nu_ratio = coords
+            return c0 * dq + c1 * nu_ratio + c2
+
+        # 独立変数の準備
+        nu_ratio = (nu - nu0) / nu0
+        xdata = np.vstack((dq, nu_ratio)) # (2, N) の形状
+
+        # スケーリング（数値的安定性のため）
+        normfac = np.mean(np.abs(I))
+        y = I / normfac
+        s = sigma / normfac
+
+        # フィッティング
+        # p0: [qの係数, 周波数勾配, 切片]
+        popt, pcov = curve_fit(plane_model, xdata, y, p0=[0.0, 0.0, 1.0], 
+                               sigma=s, absolute_sigma=True, maxfev=maxfev)
+
+        # 元のスケールに戻す
+        _, _, I0 = popt * normfac
+        _, _, std_I0 = np.sqrt(np.diag(pcov)) * normfac
+
+        return I0, std_I0
+    
 
     def _get_visnames(self, vis):
         '''Get measurement set names from the given path.
@@ -125,7 +154,7 @@ class ms:
             return outputvis_arr
         
 
-    def get_visibilities_singlechan(self, vis, pa, incl, FoV, nu0, maxfev = 10000, rmse=True ):
+    def get_visibilities_singlechan(self, vis, pa, incl, FoV, nu0, maxfev = 10000, rmse=True, fit_2d=True ):
         '''get one-dimensional deprojected visibilities and uncertainty as a function of uv-distance for a single measurement sets list.
 
         This function processes multiple measurement sets, deprojects the visibilities based on the provided position angle and inclination, azimuthally averages the data according to the specified field of view, and fits the visibilities by a linear function to extract intensity values and their uncertainties at a reference frequency.
@@ -151,19 +180,23 @@ class ms:
         Re_all = Re_all / np.cos(np.deg2rad(incl))
         sigma2_all = sigma2_all / np.cos(np.deg2rad(incl))
         
-        Re_dict, s_dict, nu_dict, q_dict, Nq = self._binning_q_only(
+        Re_dict, s_dict, nu_dict, q_dict, q_cent, q_mean, Nq = self._binning_q_only(
             q_all, Re_all, sigma2_all, nu_all, FoV
         )
         
-
-        q, V, s = self._process_q_nu_fit(
-            Re_dict, s_dict, nu_dict, q_dict, Nq, nu0, maxfev, rmse
-        )
+        if fit_2d:
+            q, V, s = self._process_q_nu_fit_2d(
+                Re_dict, s_dict, nu_dict, q_dict, q_cent, Nq, nu0, maxfev, rmse
+            )
+        else:
+            q, V, s = self._process_q_nu_fit(
+                Re_dict, s_dict, nu_dict, q_mean, Nq, nu0, maxfev, rmse
+            )
 
         return q, V, s
     
 
-    def get_visibilities(self, vis, nu, pa, incl, FoV, output, save = True, maxfev = 10000, rmse=True):
+    def get_visibilities(self, vis, nu, pa, incl, FoV, output, save = True, maxfev = 10000, rmse=True, fit_2d=True):
         '''get one-dimensional deprojected visibilities and uncertainty as a function of uv-distance for multiple measurement set lists
         
         This function processes multiple sets of measurement sets, deprojects the visibilities based on the provided position angle and inclination, azimuthally averages the data according to the specified field of view, and fits the visibilities by a linear function to extract intensity values and their uncertainties at given reference frequencies.
@@ -176,6 +209,7 @@ class ms:
             FoV (float): Field of view in arcseconds to determine the bin size for azimuthal averaging.
             output (str): Base path for saving the output pickle file.
             save (bool, optional): If True, saves the output data to a pickle file. Defaults to True.
+            fit_2d (bool, optional): If True, fits the visibilities using a 2D fitting method. Defaults to True.
         
         '''
 
@@ -193,7 +227,7 @@ class ms:
             vis_list = vis[inu]
             nu0 = nu[inu]
 
-            q[inu], V[inu], s[inu] = self.get_visibilities_singlechan(vis_list, pa, incl, FoV, nu0, maxfev, rmse)
+            q[inu], V[inu], s[inu] = self.get_visibilities_singlechan(vis_list, pa, incl, FoV, nu0, maxfev, rmse, fit_2d)
 
         data = { 'q':q, 'V':V, 's':s, 'nu':nu, 'Nch':Nnu }
 
@@ -323,6 +357,7 @@ class ms:
         s_dict = {}
         nu_dict = {}
         q_dict = {}
+        q_mean = {}
 
         iq_valid = 0
 
@@ -337,16 +372,19 @@ class ms:
                 
                 #q_dict[iq_valid] = q_cent[iq]
 
+                
+                q_dict[iq_valid] = q_all[mask]
+
                 _weights = 1.0 / sigma2_all[mask]
-                q_dict[iq_valid] = np.average(q_all[mask], weights=_weights)
+                q_mean[iq_valid] = np.average(q_all[mask], weights=_weights)
 
                 iq_valid += 1
 
-        return Re_dict, s_dict, nu_dict, q_dict, iq_valid
+        return Re_dict, s_dict, nu_dict, q_dict, q_cent, q_mean, iq_valid
 
 
 
-    def _process_q_nu_fit(self, Re_dict, s_dict, nu_dict, q_dict, Nq, nu0, maxfev, rmse):
+    def _process_q_nu_fit(self, Re_dict, s_dict, nu_dict, q_mean, Nq, nu0, maxfev, rmse):
         
 
         I_res = np.array([])
@@ -365,7 +403,7 @@ class ms:
 
                 I_res = np.append( I_res, I_fit )
                 Ierr_res = np.append( Ierr_res, I_err )
-                q_res = np.append(q_res, q_dict[iq])
+                q_res = np.append(q_res, q_mean[iq])
 
             elif len(np.unique(nu_dict[iq])) == 1:
 
@@ -377,7 +415,7 @@ class ms:
 
                 I_res = np.append( I_res, I_mean )
                 Ierr_res = np.append( Ierr_res, I_std )
-                q_res = np.append(q_res, q_dict[iq])
+                q_res = np.append(q_res, q_mean[iq])
 
         return q_res, I_res, Ierr_res
 
@@ -386,3 +424,30 @@ class ms:
 
 
 
+
+    def _process_q_nu_fit_2d(self, Re_dict, s_dict, nu_dict, q_dict, q_cen, Nq, nu0, maxfev, rmse):
+            
+
+            I_res = np.array([])
+            Ierr_res = np.array([])
+            q_res = np.array([])
+
+            for iq in range(Nq):
+
+                dq = (q_dict[iq] - q_cen[iq])/q_cen[iq]
+
+                if len(np.unique(nu_dict[iq])) > 1:
+                    _, _, I_fit, I_err = self._leastsq_2d(
+                        dq,
+                        nu_dict[iq],
+                        nu0,
+                        Re_dict[iq],
+                        s_dict[iq], maxfev, rmse
+                    )
+
+                    I_res = np.append( I_res, I_fit )
+                    Ierr_res = np.append( Ierr_res, I_err )
+                    q_res = np.append(q_res, q_cen[iq])
+
+
+            return q_res, I_res, Ierr_res
