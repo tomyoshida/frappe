@@ -22,7 +22,7 @@ class ms:
         self.ctool = casatools
         self.ct = casatasks
 
-    def _leastsq(self, nu, nu0, I, sigma, maxfev = 10000):
+    def _leastsq(self, nu, nu0, I, sigma, maxfev = 10000, rmse=True):
         
         def lin_model(x, a, b):
             return a * x + b
@@ -38,6 +38,16 @@ class ms:
         a, b = popt * normfac
         perr = np.sqrt(np.diag(pcov)) # 標準誤差
         std_a, std_b = perr * normfac
+
+
+        if rmse:
+            y_fit = lin_model(x, *popt)
+            residuals = y - y_fit
+            dof = len(y) - len(popt)
+            rmse = np.sqrt(np.sum(residuals**2) / dof) if dof > 0 else 0
+
+            std_b = rmse / np.sqrt(len(y)) * normfac
+
     
         return a, std_a, b, std_b
     
@@ -115,7 +125,7 @@ class ms:
             return outputvis_arr
         
 
-    def get_visibilities_singlechan(self, vis, pa, incl, FoV, nu0, maxfev = 10000 ):
+    def get_visibilities_singlechan(self, vis, pa, incl, FoV, nu0, maxfev = 10000, rmse=True ):
         '''get one-dimensional deprojected visibilities and uncertainty as a function of uv-distance for a single measurement sets list.
 
         This function processes multiple measurement sets, deprojects the visibilities based on the provided position angle and inclination, azimuthally averages the data according to the specified field of view, and fits the visibilities by a linear function to extract intensity values and their uncertainties at a reference frequency.
@@ -147,13 +157,13 @@ class ms:
         
 
         q, V, s = self._process_q_nu_fit(
-            Re_dict, s_dict, nu_dict, q_dict, Nq, nu0, maxfev
+            Re_dict, s_dict, nu_dict, q_dict, Nq, nu0, maxfev, rmse
         )
 
         return q, V, s
     
 
-    def get_visibilities(self, vis, nu, pa, incl, FoV, output, save = True, maxfev = 10000):
+    def get_visibilities(self, vis, nu, pa, incl, FoV, output, save = True, maxfev = 10000, rmse=True):
         '''get one-dimensional deprojected visibilities and uncertainty as a function of uv-distance for multiple measurement set lists
         
         This function processes multiple sets of measurement sets, deprojects the visibilities based on the provided position angle and inclination, azimuthally averages the data according to the specified field of view, and fits the visibilities by a linear function to extract intensity values and their uncertainties at given reference frequencies.
@@ -183,7 +193,7 @@ class ms:
             vis_list = vis[inu]
             nu0 = nu[inu]
 
-            q[inu], V[inu], s[inu] = self.get_visibilities_singlechan(vis_list, pa, incl, FoV, nu0, maxfev)
+            q[inu], V[inu], s[inu] = self.get_visibilities_singlechan(vis_list, pa, incl, FoV, nu0, maxfev, rmse)
 
         data = { 'q':q, 'V':V, 's':s, 'nu':nu, 'Nch':Nnu }
 
@@ -336,7 +346,7 @@ class ms:
 
 
 
-    def _process_q_nu_fit(self, Re_dict, s_dict, nu_dict, q_dict, Nq, nu0, maxfev):
+    def _process_q_nu_fit(self, Re_dict, s_dict, nu_dict, q_dict, Nq, nu0, maxfev, rmse):
         
 
         I_res = np.array([])
@@ -350,7 +360,7 @@ class ms:
                     nu_dict[iq],
                     nu0,
                     Re_dict[iq],
-                    s_dict[iq], maxfev
+                    s_dict[iq], maxfev, rmse
                 )
 
                 I_res = np.append( I_res, I_fit )
@@ -362,6 +372,7 @@ class ms:
                 # weighted mean
                 I_mean = np.average( Re_dict[iq], weights = 1.0 / s_dict[iq]**2 )
                 # standard error - the absolute value of s is not given here.
+                # this is not precise...
                 I_std = np.std(Re_dict[iq], ddof=1) / np.sqrt(len(Re_dict[iq]))
 
                 I_res = np.append( I_res, I_mean )
