@@ -324,7 +324,11 @@ class ms:
                 Re_dict[iq_valid] = Re_all[mask]
                 s_dict[iq_valid] = np.sqrt(sigma2_all[mask])
                 nu_dict[iq_valid] = freq_all[mask]
-                q_dict[iq_valid] = q_cent[iq]
+                
+                #q_dict[iq_valid] = q_cent[iq]
+
+                _weights = 1.0 / sigma2_all[mask]
+                q_dict[iq_valid] = np.average(q_all[mask], weights=_weights)
 
                 iq_valid += 1
 
