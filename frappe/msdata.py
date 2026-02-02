@@ -357,6 +357,17 @@ class ms:
                 Ierr_res = np.append( Ierr_res, I_err )
                 q_res = np.append(q_res, q_dict[iq])
 
+            elif len(np.unique(nu_dict[iq])) == 1:
+
+                # weighted mean
+                I_mean = np.average( Re_dict[iq], weights = 1.0 / s_dict[iq]**2 )
+                # standard error of the mean
+                I_std = np.sqrt( 1.0 / np.sum( 1.0 / s_dict[iq]**2 ) )
+
+                I_res = np.append( I_res, I_mean )
+                Ierr_res = np.append( Ierr_res, I_std )
+                q_res = np.append(q_res, q_dict[iq])
+
         return q_res, I_res, Ierr_res
 
 
