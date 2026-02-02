@@ -361,8 +361,8 @@ class ms:
 
                 # weighted mean
                 I_mean = np.average( Re_dict[iq], weights = 1.0 / s_dict[iq]**2 )
-                # standard error of the mean
-                I_std = np.sqrt( 1.0 / np.sum( 1.0 / s_dict[iq]**2 ) )
+                # standard error - the absolute value of s is not given here.
+                I_std = np.std(Re_dict[iq], ddof=1) / np.sqrt(len(Re_dict[iq]))
 
                 I_res = np.append( I_res, I_mean )
                 Ierr_res = np.append( Ierr_res, I_std )
