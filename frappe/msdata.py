@@ -53,28 +53,28 @@ class ms:
     
     def _leastsq_2d(self, dq, nu, nu0, I, sigma, maxfev=10000):
         """
-        q, nu の2変数を用いた2次元最小二乗法フィッティング
-        モデル: I(q, nu) = c0*q + c1*((nu-nu0)/nu0) + c2
+        2D least squares fitting to the visibility data as a function of deprojected uv-distance and frequency.
         """
+        
         def plane_model(coords, c0, c1, c2):
             dq, nu_ratio = coords
             return c0 * dq + c1 * nu_ratio + c2
 
-        # 独立変数の準備
+        # Prepare independent variables
         nu_ratio = (nu - nu0) / nu0
-        xdata = np.vstack((dq, nu_ratio)) # (2, N) の形状
+        xdata = np.vstack((dq, nu_ratio)) # (2, N) shape
 
-        # スケーリング（数値的安定性のため）
+        # Scaling (for numerical stability)
         normfac = np.mean(np.abs(I))
         y = I / normfac
         s = sigma / normfac
 
-        # フィッティング
-        # p0: [qの係数, 周波数勾配, 切片]
+        # Fitting
+        # p0: [q coefficient, frequency gradient, intercept]
         popt, pcov = curve_fit(plane_model, xdata, y, p0=[0.0, 0.0, 1.0], 
                                sigma=s, absolute_sigma=True, maxfev=maxfev)
 
-        # 元のスケールに戻す
+        # Rescale to original scale
         _, _, I0 = popt * normfac
         _, _, std_I0 = np.sqrt(np.diag(pcov)) * normfac
 
@@ -421,10 +421,6 @@ class ms:
 
 
 
-
-
-
-
     def _process_q_nu_fit_2d(self, Re_dict, s_dict, nu_dict, q_dict, q_cen, Nq, nu0, maxfev, rmse):
             
 
@@ -437,7 +433,7 @@ class ms:
                 dq = (q_dict[iq] - q_cen[iq])/q_cen[iq]
 
                 if len(np.unique(nu_dict[iq])) > 1:
-                    _, _, I_fit, I_err = self._leastsq_2d(
+                    I_fit, I_err = self._leastsq_2d(
                         dq,
                         nu_dict[iq],
                         nu0,
