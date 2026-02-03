@@ -56,5 +56,5 @@ Tutorials
 What's this logo?
 =================
 
-The logo shown in the top left is `Shirokuma <https://en.wikipedia.org/wiki/Kakig%C5%8Dri#Shirokuma>`, a type of frappe (more precisely, a shaved ice dessert) originated from Tenmonkan (which means *astronomical observatory*), `Kagoshima <https://en.wikipedia.org/wiki/Kagoshima>`, Japan.
+The logo shown in the top left is `Shirokuma <https://en.wikipedia.org/wiki/Kakig%C5%8Dri#Shirokuma>`_, a type of frappe (more precisely, a shaved ice dessert) originated from Tenmonkan (which means *astronomical observatory*), `Kagoshima <https://en.wikipedia.org/wiki/Kagoshima>`_, Japan.
 
