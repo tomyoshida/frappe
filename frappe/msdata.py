@@ -149,7 +149,7 @@ class ms:
                             datacolumn = datacolumn 
                         )
             
-            return outputvis_arr
+        return outputvis_arr
         
 
     def get_visibilities_singlechan(self, vis, pa, incl, FoV, nu0, maxfev = 10000, rmse=True, fit_2d=True ):
