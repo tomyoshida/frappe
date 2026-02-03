@@ -76,6 +76,7 @@ autodoc_mock_imports = [
 templates_path = ['_templates']
 exclude_patterns = ['_build', '**.ipynb_checkpoints']
 
+html_logo = '_static/frappe_logo.png'
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
