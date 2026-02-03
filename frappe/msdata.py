@@ -126,33 +126,29 @@ class ms:
             outputvis = f'./working_{visname}/spw_id_{spw}.ms'
             outputvis_arr.append(outputvis)
 
-        if dryrun:
-            
-            return outputvis_arr
-            
-        else:
-            
-            # check if working directory exists
-            if not os.path.exists(f'./working_{visname}'):
-                os.makedirs(f'./working_{visname}')
-                print('Created working directory: ' + f'./working_{visname}')
-            else:
-                # if exists, arise error
-                raise FileExistsError(f'Working directory ./working_{visname} already exists. Please remove it before running split.')
-
-            for spw in spw_id:
-
-                os.system('rm -rf ' + outputvis)
-
+            if not dryrun:
                 
-                self.ct.split(
-                        vis = vis,
-                        outputvis = outputvis,
-                        spw = f'{spw}',
-                        keepflags = False,
-                        datacolumn = datacolumn 
-                    )
-        
+                # check if working directory exists
+                if not os.path.exists(f'./working_{visname}'):
+                    os.makedirs(f'./working_{visname}')
+                    print('Created working directory: ' + f'./working_{visname}')
+                else:
+                    # if exists, arise error
+                    raise FileExistsError(f'Working directory ./working_{visname} already exists. Please remove it before running split.')
+
+                for spw in spw_id:
+
+                    os.system('rm -rf ' + outputvis)
+
+                    
+                    self.ct.split(
+                            vis = vis,
+                            outputvis = outputvis,
+                            spw = f'{spw}',
+                            keepflags = False,
+                            datacolumn = datacolumn 
+                        )
+            
             return outputvis_arr
         
 
