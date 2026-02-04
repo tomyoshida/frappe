@@ -712,7 +712,7 @@ class inference:
         self.model = model
 
 
-    def prior(self, num_samples = 1, seed = None):
+    def prior(self, num_samples = 1, seed = None, calc_cond_num = False):
         '''Show prior distributions for the latent parameters.
 
         This method generates samples from the prior distributions of the latent parameters defined in the model.
@@ -730,7 +730,7 @@ class inference:
             seed = np.random.randint(0, 1e6)
 
         def prior_model():
-            f_latents = self.model._set_latent_params(calc_cond_num=True)
+            f_latents = self.model._set_latent_params(calc_cond_num=calc_cond_num)
 
             return f_latents
 
