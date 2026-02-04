@@ -17,10 +17,10 @@ from scipy.special import j0
 
 
 from jax.scipy.interpolate import RegularGridInterpolator
-
+from jax.scipy.signal import convolve as jax_convolve
 
 import numpyro
-from numpyro.distributions import Normal, Uniform
+from numpyro.distributions import Normal, Uniform, MultivariateNormal
 from numpyro.infer import MCMC as numpyro_MCMC
 from numpyro.infer import NUTS, init_to_median, init_to_uniform
 import matplotlib.pyplot as plt
@@ -52,7 +52,7 @@ class model:
         set_opacity: method to set dust opacity model
     '''
 
-    def __init__(self, incl, r_out, N_GP, userdef_vis_model = None, flux_uncert = True, jitter=1e-6, hyperparameters_fixed=True):
+    def __init__(self, incl, r_out, N_GP, spacing = 'FB', r_in = None, userdef_vis_model = None, flux_uncert = True, jitter=1e-6, hyperparameters_fixed=True):
         '''initialize the model
 
         Args:
@@ -74,14 +74,27 @@ class model:
         self._r_out_rad = jnp.deg2rad( self._r_out/3600 )
 
         self._N_GP = N_GP
-        self._j0_zeros = jn_zeros(0, self._N_GP + 1)
-        self._j0N_plus = self._j0_zeros[-1]
-        self._j0k = self._j0_zeros[:-1]
-        
-        self._r_GP = self._r_out * self._j0k / self._j0N_plus
-        self._r_GP_rad = np.deg2rad(self._r_GP/3600)
 
-        self._HT_prefactor = 4.0 * np.pi * self._r_out_rad ** 2/ (self._j0N_plus ** 2 * J1(self._j0k) ** 2)
+        if spacing == 'FB':
+            self._j0_zeros = jn_zeros(0, self._N_GP + 1)
+            self._j0N_plus = self._j0_zeros[-1]
+            self._j0k = self._j0_zeros[:-1]
+            
+            self._r_GP = self._r_out * self._j0k / self._j0N_plus
+            self._r_GP_rad = np.deg2rad(self._r_GP/3600)
+
+            self._HT_prefactor = 4.0 * np.pi * self._r_out_rad ** 2/ (self._j0N_plus ** 2 * J1(self._j0k) ** 2)
+
+        elif spacing == 'linear':
+            
+            warnings.warn('Please use spacing = \'FB\' if you work with the visibilities', UserWarning)
+
+            self._r_GP = jnp.linspace( r_in, self._r_out, self._N_GP )
+
+            self._dr = self._r_GP[1] - self._r_GP[0]
+            self._r_GP_rad = jnp.deg2rad( self._r_GP/3600 )
+
+            self._HT_prefactor = 2.0 * np.pi * (self._r_out_rad / self._N_GP) **2
    
         self._jitter = jitter
 
@@ -247,19 +260,36 @@ class model:
         
         _I = f_I(obs._nu, self._incl, T, Sigma_d, k_abs_tot, k_sca_eff_tot )
 
-        # Hankel transform
-        V = jnp.dot(obs.H, _I) / 1e-23 # Jy
 
-        if self._userdef_vis_model is not None:
-            V = self._userdef_vis_model( V, obs, f_latents )
+        if obs.kind == 'visibility':
 
-        if dryrun:
+            # Hankel transform
+            V = jnp.dot(obs.H, _I) / 1e-23 # Jy
 
-            return V, _I
+            if self._userdef_vis_model is not None:
+                V = self._userdef_vis_model( V, obs, f_latents )
 
-        else:
+            if dryrun:
 
-            obs.V_model = V
+                return V, _I
+
+            else:
+
+                obs.V_model = V
+
+        elif obs.kind == 'radialprofile':
+
+            # Convolve with beam
+            I_convolved = jax_convolve( _I, obs._beam_kernel, mode='same' )
+            I_convolved_itp = jnp.interp(obs._r, self._r_GP, I_convolved)
+
+            if dryrun:
+
+                return I_convolved_itp, _I
+
+            else:
+
+                obs.I_model = I_convolved_itp
             
 
     def _generate_model( self, f_latents ):
@@ -342,27 +372,54 @@ class model:
 
                 for _obs in obs:
 
-                    V_final = _obs.V_model / f_band 
+                    if _obs.kind == 'visibility':
 
-                    numpyro.deterministic(f"V_final_{_obs._name}", V_final)
+                        # If you want to fit the visibility dicretly....
 
-                    numpyro.sample(
-                                f"Y_observed_{_obs._name}",
-                                Normal(loc= V_final, scale= _obs._s),
-                                obs = _obs._V
-                            )
+                        V_final = _obs.V_model / f_band 
+
+                        numpyro.deterministic(f"V_final_{_obs._name}", V_final)
+
+                        numpyro.sample(
+                                    f"Y_observed_{_obs._name}",
+                                    Normal(loc= V_final, scale= _obs._s),
+                                    obs = _obs._V
+                                )
+                    elif _obs.kind == 'radialprofile':
+
+                        # Instead if you fit the radial profiles...
+
+                        Tb_final = I2Tb( _obs._nu, _obs.I_model ) / f_band 
+
+                        numpyro.deterministic(f"Tb_final_{_obs._name}", Tb_final)
+
+                        numpyro.sample(
+                                    f"Y_observed_{_obs._name}",
+                                    MultivariateNormal(loc= Tb_final, scale_tril=_obs.L_Cov),
+                                    obs = _obs._Tb
+                                )
 
             else:
                 
                 for _obs in obs:
 
-                    numpyro.sample(
-                                f"Y_observed_{_obs._name}",
-                                Normal(loc= _obs.V_model, scale= _obs._s),
-                                obs = _obs._V
-                            )
+                    if _obs.kind == 'visibility':
 
-    def set_observations( self, band, q, V, s, f_s, f_mean,  nu, Nch ):
+                        numpyro.sample(
+                                    f"Y_observed_{_obs._name}",
+                                    Normal(loc= _obs.V_model, scale= _obs._s),
+                                    obs = _obs._V
+                                )
+                        
+                    elif _obs.kind == 'radialprofile':
+
+                        numpyro.sample(
+                                    f"Y_observed_{_obs._name}",
+                                    MultivariateNormal(loc= I2Tb( _obs._nu, _obs.I_model), scale_tril=_obs.L_Cov),
+                                    obs = _obs._Tb
+                                )
+
+    def set_visibility( self, band, q, V, s, f_s, f_mean,  nu, Nch ):
         '''set observations for a given band.
 
         This method allows you to input observational data for a specific band, including spatial frequencies, visibilities, uncertainties, flux scaling factors, and frequencies.
@@ -383,7 +440,8 @@ class model:
 
         for nch in range(Nch):
             
-            _obs = observation( f'{band}_ch_{nch}', nu[nch], q[nch], V[nch], s[nch] )
+            _obs = observation( f'{band}_ch_{nch}', nu[nch], kind='visibility' )
+            _obs._visibility( q[nch], V[nch], s[nch] )
 
             #_obs.r_rad = jnp.arange( jnp.min(jnp.deg2rad(self._r_GP/3600)), jnp.max(jnp.deg2rad(self._r_GP/3600)), 1/jnp.max(_obs.q)/self.ndr )
 
@@ -395,6 +453,23 @@ class model:
             H = self._HT_prefactor * J0(arg)
  
             _obs.H = H
+            
+            obs_tmp.append( _obs )
+            
+        self._bands.append(band)
+            
+        self._observations[band] = obs_tmp
+        self._s_fs[band] = f_s
+        self._mean_fs[band] = f_mean
+
+    def set_radialprofile(  self, band, r, Tb, s, f_s, f_mean, nu, Nch, FWHM): 
+
+        obs_tmp = []
+
+        for nch in range(Nch):
+            
+            _obs = observation( f'{band}_ch_{nch}', nu[nch], kind='radialprofile' )
+            _obs._radialprofile( r[nch], Tb[nch], s[nch], FWHM, self._dr )
             
             obs_tmp.append( _obs )
             
@@ -550,7 +625,7 @@ class observation:
 
     '''
 
-    def __init__(self, name, nu, q, V, s ):
+    def __init__(self, name, nu, kind='visibility' ):
         '''initialize observation data
         
         Args:
@@ -560,12 +635,56 @@ class observation:
             V (array): observed visibilities in Jy
             s (array): uncertainties in Jy
         '''
-
+        self.kind = kind
         self._name = name
         self._nu = nu
+
+    def _visibility(self, q, V, s):
+        '''set visibility data
+        
+        Args:
+            q (array): spatial frequencies in 1/arcsec
+            V (array): observed visibilities in Jy
+            s (array): uncertainties in Jy
+        '''
         self._q =  jax.device_put(jnp.asarray(q))
         self._V =  jax.device_put(jnp.asarray(V))
         self._s =  jax.device_put(jnp.asarray(s))
+
+    def _radialprofile( self, r, Tb, s, FWHM, dr):
+
+        self._r = jax.device_put(jnp.asarray(r))
+        self._Tb = jax.device_put(jnp.asarray(Tb))
+        self._s = jax.device_put(jnp.asarray(s))
+        self._FWHM = FWHM
+
+
+        ## Covariance matrix
+        sigma_beam = FWHM / (2 * jnp.sqrt(2 * jnp.log(2)))
+                    
+        dist_sq = (r[:, None] - r[None, :])**2
+                    
+        R_dist = jnp.exp(-dist_sq / (4 * sigma_beam**2))
+        
+
+        self.Cov = s[:, None] * R_dist * s[None, :]
+                    
+        
+        self.Cov += jnp.eye(self.Cov.shape[0]) * 1e-6
+
+        self.L_Cov = jnp.linalg.cholesky(self.Cov)
+
+
+        ## beam kernel
+
+        
+        
+        kernel_r = jnp.arange(-4 * sigma_beam, 4 * sigma_beam + dr, dr)
+        kernel = jnp.exp(-(kernel_r**2) / (2.0 * sigma_beam**2))
+        kernel = kernel / jnp.sum(kernel)
+
+        self._beam_kernel = kernel
+    
         
 
 class inference:

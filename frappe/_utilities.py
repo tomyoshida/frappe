@@ -16,15 +16,30 @@ import jax.numpy as jnp
 from scipy.ndimage import gaussian_filter1d
 
 
+
 from scipy.interpolate import interp1d as scipy_interp1d
 
-def check_range(x, lower, upper, alpha=10.0):
+def check_range_old(x, lower, upper, alpha=10.0):
     # Apply exponential penalty if x is outside [lower, upper]
     penalty_lower = -jnp.exp(-alpha * (x - lower))
     penalty_upper = -jnp.exp(alpha * (x - upper))
     penalty = jnp.where(x < lower, penalty_lower,
                 jnp.where(x > upper, penalty_upper, 0.0))
     return penalty
+
+def check_range(x, lower, upper, alpha=100.0):
+    """
+    勾配消失を防ぎつつ、数値的に安定したペナルティを与える
+    """
+    # 境界から外れた距離を計算
+    dist_lower = lower - x
+    dist_upper = x - upper
+    
+    # 範囲外（dist > 0）の場合のみ、その距離の2乗をペナルティとする
+    penalty_lower = -alpha * jnp.square(jnp.maximum(0.0, dist_lower))
+    penalty_upper = -alpha * jnp.square(jnp.maximum(0.0, dist_upper))
+    
+    return penalty_lower + penalty_upper
 
 
 
@@ -71,6 +86,17 @@ def B(nu, T):
 
     return 2*h*nu**3/c**2 / ( jnp.exp(h*nu/k_B/T) - 1 )
     
+
+def I2Tb(nu, I):
+
+    '''
+    Convert intensity I(nu) to brightness temperature Tb using the Reighleigh-Jeans approximation.
+    nu: jnp.ndarray or float, frequency in Hz
+    I: jnp.ndarray or float, intensity in cgs units (erg/s/cm^2/Hz/sr)
+    Returns the brightness temperature Tb in Kelvin.
+    ''' 
+    return c**2 / (2*k_B*nu**2) * I
+
 def sigmoid_transform(x, min_val=0.0, max_val=1.0, leak = 0.01):
     '''
     Apply a sigmoid transformation to the input array x.
@@ -214,3 +240,4 @@ def create_opacity_table(lam, a, k_abs, k_sca_eff, lam0, log10_a_dense, q_dense,
                 )
         
         return log10_k_abs_tot, log10_k_sca_eff_tot
+    
