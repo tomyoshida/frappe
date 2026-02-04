@@ -52,7 +52,7 @@ class model:
         set_opacity: method to set dust opacity model
     '''
 
-    def __init__(self, incl, r_out, N_GP, spacing = 'FB', r_in = None, userdef_vis_model = None, flux_uncert = True, jitter=1e-6, hyperparameters_fixed=True):
+    def __init__(self, incl, r_out, N_GP, spacing = 'FB', r_in = None, userdef_vis_model = None, flux_uncert = True, jitter=1e-4, hyperparameters_fixed=True):
         '''initialize the model
 
         Args:
@@ -150,10 +150,13 @@ class model:
 
                 #_g_mean = numpyro.sample(f"g_mean_{param_name}", Normal(0, 1.0))
 
-                K = jnp.eye(R.shape[0]) * self._jitter
+                K = jnp.zeros((R.shape[0], R.shape[0]))
 
                 for  _g_variance, _g_lengthscale in zip( _g_variances, _g_lengthscales ):
                     K += rbf_kernel(R, R, _g_variance, _g_lengthscale)
+
+                relative_jitter = jnp.nanmean(jnp.diag(K)) * self._jitter
+                K += jnp.eye(R.shape[0]) * relative_jitter
                 
                 L_K = jnp.linalg.cholesky(K)
 
