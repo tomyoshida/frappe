@@ -37,6 +37,7 @@ from scipy.special import j0 as J0
 from scipy.special import j1 as J1
 from scipy.special import jn_zeros
 
+from jax.debug import print as jax_print
 
 jax.config.update("jax_enable_x64", True) 
 
@@ -116,7 +117,7 @@ class model:
                 
 
         
-    def _set_latent_params( self ):
+    def _set_latent_params( self, calc_cond_num = False ):
         '''
         Set latent parameters using Gaussian processes.
         Returns a dictionary of latent parameters.
@@ -157,7 +158,14 @@ class model:
 
                 relative_jitter = jnp.nanmean(jnp.diag(K)) * self._jitter
                 K += jnp.eye(R.shape[0]) * relative_jitter
+
+
+                if calc_cond_num:
+                    eigenvalues = jnp.linalg.eigvalsh(K)
+                    cond_num = jnp.max(eigenvalues) / jnp.maximum(jnp.min(eigenvalues), 1e-18)
+                    jax_print("Param: {name}, Condition Number: {cond}", name=param_name, cond=cond_num)
                 
+                                
                 L_K = jnp.linalg.cholesky(K)
 
                 
@@ -722,7 +730,7 @@ class inference:
             seed = np.random.randint(0, 1e6)
 
         def prior_model():
-            f_latents = self.model._set_latent_params()
+            f_latents = self.model._set_latent_params(calc_cond_num=True)
 
             return f_latents
 
