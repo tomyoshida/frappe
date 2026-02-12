@@ -147,26 +147,26 @@ class model:
 
                     _g_mean = priors['g_mean']
 
-                #_g_variance = priors['g_variance'] + (numpyro.sample(f"variance_{param_name}", Uniform(-1.0, 1.0)) + 1.0) / 2.0 * ( 1.0 - priors['g_variance'] )
+                    L_K = priors['L_K']
 
-                #_g_mean = numpyro.sample(f"g_mean_{param_name}", Normal(0, 1.0))
+                else:
+            
+                    K = jnp.zeros((R.shape[0], R.shape[0]))
 
-                K = jnp.zeros((R.shape[0], R.shape[0]))
+                    for  _g_variance, _g_lengthscale in zip( _g_variances, _g_lengthscales ):
+                        K += rbf_kernel(R, R, _g_variance, _g_lengthscale)
 
-                for  _g_variance, _g_lengthscale in zip( _g_variances, _g_lengthscales ):
-                    K += rbf_kernel(R, R, _g_variance, _g_lengthscale)
-
-                relative_jitter = jnp.nanmean(jnp.diag(K)) * self._jitter
-                K += jnp.eye(R.shape[0]) * relative_jitter
+                    relative_jitter = jnp.nanmean(jnp.diag(K)) * self._jitter
+                    K += jnp.eye(R.shape[0]) * relative_jitter
 
 
-                if calc_cond_num:
-                    eigenvalues = jnp.linalg.eigvalsh(K)
-                    cond_num = jnp.max(eigenvalues) / jnp.maximum(jnp.min(eigenvalues), 1e-18)
-                    jax_print("Param: {name}, Condition Number: {cond}", name=param_name, cond=cond_num)
-                
-                                
-                L_K = jnp.linalg.cholesky(K)
+                    if calc_cond_num:
+                        eigenvalues = jnp.linalg.eigvalsh(K)
+                        cond_num = jnp.max(eigenvalues) / jnp.maximum(jnp.min(eigenvalues), 1e-18)
+                        jax_print("Param: {name}, Condition Number: {cond}", name=param_name, cond=cond_num)
+                    
+                                    
+                    L_K = jnp.linalg.cholesky(K)
 
                 
                 z = numpyro.sample(
@@ -231,10 +231,25 @@ class model:
         
         if free:
 
+            _g_variances = np.atleast_1d(variance)
+            _g_lengthscales = np.atleast_1d(lengthscale)
+
+            R = self._r_GP[:, None]
+            K = jnp.zeros((R.shape[0], R.shape[0]))
+
+            for  _g_variance, _g_lengthscale in zip( _g_variances, _g_lengthscales ):
+                K += rbf_kernel(R, R, _g_variance, _g_lengthscale)
+
+            relative_jitter = jnp.nanmean(jnp.diag(K)) * self._jitter
+            K += jnp.eye(R.shape[0]) * relative_jitter
+
+       
+            L_K = jnp.linalg.cholesky(K)
+
             self._free_parameters[kind] = { 'f_min' : bounds[0], 'f_max' : bounds[1], 'GP' : GP,
                                           'f_s' : mean_std[1], 'f_mean' : mean_std[0],
                                            'g_variance':np.atleast_1d(variance),
-                                           'g_lengthscale':np.atleast_1d(lengthscale),
+                                           'g_lengthscale':np.atleast_1d(lengthscale), 'L_K' : L_K,
                                            'g_mean':mean }
             
             if GP:
