@@ -944,8 +944,8 @@ class inference:
             num_samples=num_samples,
             num_chains=num_chains,
             progress_bar=True,
-            chain_method='vectorized',
-            #chain_method='parallel'
+            #chain_method='vectorized',
+            chain_method='parallel'
         )
 
         # --- warmup ---
