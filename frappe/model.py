@@ -961,7 +961,6 @@ class inference:
         # --- main sampling ---
         mcmc.run(
             mcmc.post_warmup_state.rng_key,
-            init_params=None,
             extra_fields=('diverging', 'accept_prob', 'energy', 'potential_energy')
         )
         
